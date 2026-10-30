@@ -1,0 +1,5 @@
+sites/**/node_modules/
+sites/**/.next/
+sites/**/dist/
+sites/**/build/
+sites/**/.vercel/
