@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Halden | Everyday Clothing</title>
+  <meta name="description" content="Halden makes considered everyday clothing: tees, knits, outerwear, denim, dresses and accessories.">
+  <meta name="theme-color" content="#f6f3ee">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231c1b19'/%3E%3Ctext x='16' y='22' font-family='Georgia,serif' font-size='18' fill='%23f6f3ee' text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <div class="announce">Free shipping on orders over $100 &middot; Free 30-day returns</div>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <button class="icon-btn menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-nav" data-action="open-menu">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <a href="#/" class="logo" aria-label="Halden home">Halden</a>
+      <nav class="main-nav" aria-label="Main">
+        <a href="#/shop" data-nav="all">Shop all</a>
+        <a href="#/shop?cat=tops" data-nav="tops">Tops</a>
+        <a href="#/shop?cat=knitwear" data-nav="knitwear">Knits</a>
+        <a href="#/shop?cat=outerwear" data-nav="outerwear">Outerwear</a>
+        <a href="#/shop?cat=bottoms" data-nav="bottoms">Bottoms</a>
+        <a href="#/shop?cat=dresses" data-nav="dresses">Dresses</a>
+        <a href="#/shop?cat=accessories" data-nav="accessories">Shoes &amp; Bags</a>
+        <a href="#/shop?sale=1" data-nav="sale" class="nav-sale">Sale</a>
+      </nav>
+      <div class="header-actions">
+        <button class="icon-btn" aria-label="Search" data-action="open-search">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        </button>
+        <button class="icon-btn cart-btn" aria-label="Open bag, 0 items" data-action="open-cart">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+          <span class="cart-count" hidden>0</span>
+        </button>
+      </div>
+    </div>
+    <form class="search-bar" role="search" hidden data-search-form>
+      <label for="search-input" class="sr-only">Search products</label>
+      <input id="search-input" type="search" placeholder="Search tees, jeans, coats..." autocomplete="off">
+      <button type="submit" class="btn btn-dark btn-sm">Search</button>
+      <button type="button" class="icon-btn" aria-label="Close search" data-action="close-search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </form>
+  </header>
+
+  <div class="mobile-nav" id="mobile-nav" hidden>
+    <div class="mobile-nav-panel" role="dialog" aria-modal="true" aria-label="Menu">
+      <div class="drawer-head">
+        <span class="logo">Halden</span>
+        <button class="icon-btn" aria-label="Close menu" data-action="close-menu">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+      <nav aria-label="Mobile">
+        <a href="#/shop">Shop all</a>
+        <a href="#/shop?cat=tops">Tops</a>
+        <a href="#/shop?cat=knitwear">Knits &amp; Sweats</a>
+        <a href="#/shop?cat=outerwear">Outerwear</a>
+        <a href="#/shop?cat=bottoms">Bottoms</a>
+        <a href="#/shop?cat=dresses">Dresses</a>
+        <a href="#/shop?cat=accessories">Shoes &amp; Bags</a>
+        <a href="#/shop?sale=1" class="nav-sale">Sale</a>
+      </nav>
+    </div>
+  </div>
+
+  <main id="main" tabindex="-1"></main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <span class="logo">Halden</span>
+        <p>Considered everyday clothing, made to be worn often and kept for years.</p>
+      </div>
+      <div>
+        <h3>Shop</h3>
+        <a href="#/shop?cat=tops">Tops</a>
+        <a href="#/shop?cat=outerwear">Outerwear</a>
+        <a href="#/shop?cat=bottoms">Bottoms</a>
+        <a href="#/shop?cat=dresses">Dresses</a>
+      </div>
+      <div>
+        <h3>Help</h3>
+        <a href="#/shop" data-action="info" data-info="shipping">Shipping</a>
+        <a href="#/shop" data-action="info" data-info="returns">Returns</a>
+        <a href="#/shop" data-action="info" data-info="sizing">Size guide</a>
+      </div>
+      <form class="newsletter" data-newsletter novalidate>
+        <h3>Get 10% off your first order</h3>
+        <p>Join the list for new arrivals and early sale access.</p>
+        <div class="newsletter-row">
+          <label for="nl-email" class="sr-only">Email address</label>
+          <input id="nl-email" type="email" placeholder="you@example.com" required>
+          <button class="btn btn-light btn-sm" type="submit">Sign up</button>
+        </div>
+        <p class="newsletter-msg" aria-live="polite"></p>
+      </form>
+    </div>
+    <div class="footer-base">
+      <span>&copy; 2026 Halden. Demo store: no real orders or payments are processed.</span>
+      <span>Photography from <a href="https://unsplash.com" target="_blank" rel="noopener">Unsplash</a></span>
+    </div>
+  </footer>
+
+  <div class="cart-drawer" id="cart-drawer" hidden>
+    <div class="cart-panel" role="dialog" aria-modal="true" aria-labelledby="cart-title">
+      <div class="drawer-head">
+        <h2 id="cart-title">Your bag</h2>
+        <button class="icon-btn" aria-label="Close bag" data-action="close-cart">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+      <div class="cart-body" data-cart-body></div>
+      <div class="cart-foot" data-cart-foot></div>
+    </div>
+  </div>
+
+  <div class="modal" id="modal" hidden>
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <button class="icon-btn modal-close" aria-label="Close" data-action="close-modal">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+      <div data-modal-body></div>
+    </div>
+  </div>
+
+  <div class="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="js/products.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
