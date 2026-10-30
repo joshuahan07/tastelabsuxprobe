@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apex — Executive Revenue & Business Intelligence Dashboard</title>
+  <meta name="description" content="Next-generation business intelligence dashboard tracking live revenue, sales performance, orders, category metrics, and operational forecasting.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f46e5'/%3E%3Cpath d='M7 21l5-6 4 4 9-11' fill='none' stroke='%23ffffff' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='25' cy='8' r='2' fill='%2322d3ee'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    // Prevent theme flash
+    try {
+      const savedTheme = localStorage.getItem('apex_theme');
+      if (savedTheme) {
+        document.documentElement.dataset.theme = savedTheme;
+      } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.dataset.theme = 'dark';
+      }
+    } catch(e) {}
+  </script>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main dashboard content</a>
+
+  <!-- Global Sticky Top Header -->
+  <header class="top-header" role="banner">
+    <div class="brand-section">
+      <div class="brand-logo" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+          <polyline points="16 7 22 7 22 13"></polyline>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <div class="brand-title">
+          <span>APEX</span>
+          <span class="brand-badge">Command Center</span>
+        </div>
+        <span class="brand-subtitle">Apex Enterprise Commerce · Global Operations</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <div class="live-indicator" title="Connected to Real-time Stream">
+        <span class="pulse-dot"></span>
+        <span>LIVE SYNC</span>
+      </div>
+
+      <!-- Currency Switcher -->
+      <div class="select-wrapper">
+        <select id="currency-select" class="select-control" aria-label="Select Currency">
+          <option value="USD">USD ($)</option>
+          <option value="EUR">EUR (€)</option>
+          <option value="GBP">GBP (£)</option>
+          <option value="JPY">JPY (¥)</option>
+        </select>
+        <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+
+      <!-- New Order Modal Trigger -->
+      <button id="btn-new-order" class="btn btn-primary" type="button" aria-haspopup="dialog" aria-expanded="false">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        <span class="desktop-only">Add Transaction</span>
+      </button>
+
+      <!-- Export Data Trigger -->
+      <div class="select-wrapper">
+        <select id="export-select" class="select-control" aria-label="Export Data">
+          <option value="" disabled selected>Export Data ▾</option>
+          <option value="csv">Export CSV</option>
+          <option value="json">Export JSON</option>
+          <option value="print">Print / PDF</option>
+        </select>
+        <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+
+      <!-- Dark / Light Theme Toggle -->
+      <button id="theme-toggle" class="btn btn-icon" type="button" aria-label="Toggle dark/light theme" title="Toggle Theme">
+        <svg id="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        <svg id="icon-moon" style="display:none;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main id="main-content" class="app-container" role="main">
+
+    <!-- Executive Controls & Global Filter Toolbar -->
+    <section class="toolbar-section" aria-label="Global Dashboard Filters">
+      <div class="toolbar-left">
+        <!-- Date Range Segments -->
+        <div class="segmented-group" id="range-picker" role="radiogroup" aria-label="Timeframe selection">
+          <button type="button" class="segmented-btn" data-range="1" role="radio" aria-checked="false">24H</button>
+          <button type="button" class="segmented-btn" data-range="7" role="radio" aria-checked="false">7D</button>
+          <button type="button" class="segmented-btn active" data-range="30" role="radio" aria-checked="true">30D</button>
+          <button type="button" class="segmented-btn" data-range="90" role="radio" aria-checked="false">90D</button>
+          <button type="button" class="segmented-btn" data-range="365" role="radio" aria-checked="false">12M</button>
+          <button type="button" class="segmented-btn" data-range="all" role="radio" aria-checked="false">All</button>
+        </div>
+
+        <!-- Filter Dropdowns -->
+        <div class="filter-dropdowns">
+          <div class="select-wrapper">
+            <select id="filter-category" class="select-control" aria-label="Filter by Category">
+              <option value="all">All Categories</option>
+              <option value="Enterprise Cloud & Tech">Enterprise Cloud & Tech</option>
+              <option value="Audio & Sound Systems">Audio & Sound Systems</option>
+              <option value="Workspace & Ergonomics">Workspace & Ergonomics</option>
+              <option value="Smart Living & Lighting">Smart Living & Lighting</option>
+              <option value="Apparel & Carry">Apparel & Carry</option>
+              <option value="Wellness & Recovery">Wellness & Recovery</option>
+            </select>
+            <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+
+          <div class="select-wrapper">
+            <select id="filter-channel" class="select-control" aria-label="Filter by Sales Channel">
+              <option value="all">All Channels</option>
+              <option value="Direct E-Commerce">Direct E-Commerce</option>
+              <option value="B2B Enterprise Wholesale">B2B Wholesale</option>
+              <option value="Marketplace Partnerships">Marketplace</option>
+              <option value="Retail Flagship POS">Retail Stores</option>
+              <option value="Partner Affiliates">Affiliates & Social</option>
+            </select>
+            <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+
+          <div class="select-wrapper">
+            <select id="filter-region" class="select-control" aria-label="Filter by Region">
+              <option value="all">All Regions (Global)</option>
+              <option value="North America">North America</option>
+              <option value="Europe">Europe</option>
+              <option value="Asia-Pacific">Asia-Pacific</option>
+              <option value="Latin America">Latin America</option>
+              <option value="Middle East & Africa">Middle East & Africa</option>
+            </select>
+            <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+
+          <button id="btn-reset-filters" class="btn btn-subtle btn-sm" type="button" style="display:none;">
+            ✕ Reset Filters
+          </button>
+        </div>
+      </div>
+
+      <div class="toolbar-right">
+        <div class="active-range-info" id="active-range-label">
+          <span>Period:</span>
+          <strong id="range-text-display">Calculating...</strong>
+        </div>
+      </div>
+    </section>
+
+    <!-- Top Key Performance Metrics (KPI Ribbon - 6 Metrics) -->
+    <section class="kpi-grid" aria-label="Key Performance Indicators">
+      <!-- KPI 1: Gross Revenue -->
+      <article class="kpi-card" id="card-revenue">
+        <div class="kpi-top">
+          <div class="kpi-meta">
+            <span class="kpi-title">Gross Revenue</span>
+          </div>
+          <span class="kpi-badge positive" id="kpi-rev-badge">+14.2%</span>
+        </div>
+        <div class="kpi-value-row">
+          <div class="kpi-value" id="kpi-rev-val">$0.00</div>
+          <div class="kpi-sparkline-wrap" id="sparkline-rev"></div>
+        </div>
+        <div class="kpi-subtext">
+          <span>vs. prior period (<span id="kpi-rev-prior">$0</span>)</span>
+        </div>
+      </article>
+
+      <!-- KPI 2: Net Orders -->
+      <article class="kpi-card" id="card-orders">
+        <div class="kpi-top">
+          <div class="kpi-meta">
+            <span class="kpi-title">Total Orders</span>
+          </div>
+          <span class="kpi-badge positive" id="kpi-ord-badge">+8.7%</span>
+        </div>
+        <div class="kpi-value-row">
+          <div class="kpi-value" id="kpi-ord-val">0</div>
+          <div class="kpi-sparkline-wrap" id="sparkline-ord"></div>
+        </div>
+        <div class="kpi-subtext">
+          <span>Prior: <span id="kpi-ord-prior">0</span> orders</span>
+        </div>
+      </article>
+
+      <!-- KPI 3: Average Order Value -->
+      <article class="kpi-card" id="card-aov">
+        <div class="kpi-top">
+          <div class="kpi-meta">
+            <span class="kpi-title">Average Order Value</span>
+          </div>
+          <span class="kpi-badge positive" id="kpi-aov-badge">+5.1%</span>
+        </div>
+        <div class="kpi-value-row">
+          <div class="kpi-value" id="kpi-aov-val">$0.00</div>
+          <div class="kpi-sparkline-wrap" id="sparkline-aov"></div>
+        </div>
+        <div class="kpi-subtext">
+          <span>Basket size: <strong id="kpi-basket-size">2.3 items</strong></span>
+        </div>
+      </article>
+
+      <!-- KPI 4: Net Profit & Margin -->
+      <article class="kpi-card" id="card-profit">
+        <div class="kpi-top">
+          <div class="kpi-meta">
+            <span class="kpi-title">Net Profit Margin</span>
+          </div>
+          <span class="kpi-badge positive" id="kpi-margin-badge">31.4%</span>
+        </div>
+        <div class="kpi-value-row">
+          <div class="kpi-value" id="kpi-profit-val">$0.00</div>
+          <div class="kpi-sparkline-wrap" id="sparkline-profit"></div>
+        </div>
+        <div class="kpi-subtext">
+          <span>Margin: <strong id="kpi-margin-val">31.4%</strong></span>
+        </div>
+      </article>
+
+      <!-- KPI 5: Sales Conversion Rate -->
+      <article class="kpi-card" id="card-conv">
+        <div class="kpi-top">
+          <div class="kpi-meta">
+            <span class="kpi-title">Conversion Rate</span>
+          </div>
+          <span class="kpi-badge positive" id="kpi-conv-badge">+0.4%</span>
+        </div>
+        <div class="kpi-value-row">
+          <div class="kpi-value" id="kpi-conv-val">3.82%</div>
+          <div class="kpi-sparkline-wrap" id="sparkline-conv"></div>
+        </div>
+        <div class="kpi-subtext">
+          <span>Checkout completion: <strong>94.2%</strong></span>
+        </div>
+      </article>
+
+      <!-- KPI 6: Fulfillment & Return Rate -->
+      <article class="kpi-card" id="card-returns">
+        <div class="kpi-top">
+          <div class="kpi-meta">
+            <span class="kpi-title">Return & Refund Rate</span>
+          </div>
+          <span class="kpi-badge neutral" id="kpi-return-badge">1.9%</span>
+        </div>
+        <div class="kpi-value-row">
+          <div class="kpi-value" id="kpi-return-val">1.92%</div>
+          <div class="kpi-sparkline-wrap" id="sparkline-return"></div>
+        </div>
+        <div class="kpi-subtext">
+          <span>Low operational risk</span>
+        </div>
+      </article>
+    </section>
+
+    <!-- Executive Briefing / AI Performance Summary Card -->
+    <section class="briefing-card" aria-label="Executive Performance Summary">
+      <div class="briefing-header">
+        <div class="briefing-title-group">
+          <div class="ai-icon-chip" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+            </svg>
+          </div>
+          <div>
+            <h2 class="briefing-heading">Executive Performance Summary & Insights</h2>
+            <p class="briefing-subtitle">Dynamic automated intelligence report based on current filters and historical cohort velocity</p>
+          </div>
+        </div>
+        <div class="score-pill">
+          <span class="score-circle"></span>
+          <span id="health-score-text">Business Health: 94/100 (Exceptional)</span>
+        </div>
+      </div>
+
+      <!-- 4 Generated Intelligent Insights -->
+      <div class="insights-grid" id="insights-container">
+        <!-- Dynamically rendered -->
+      </div>
+
+      <!-- Target Pacing Bar -->
+      <div class="target-pacing-bar">
+        <div class="target-info">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+          <span>Quarterly Revenue Target: <strong id="target-goal-text">$1,500,000</strong></span>
+        </div>
+        <div class="progress-track" role="progressbar" aria-valuenow="88" aria-valuemin="0" aria-valuemax="100">
+          <div class="progress-fill" id="target-progress-fill" style="width: 88%;"></div>
+        </div>
+        <div class="target-info">
+          <strong id="target-percent-text">88.4% Achieved</strong>
+          <span class="desktop-only" id="target-runrate-text">· On track to beat target by +6.2%</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Visual Analytics: Primary Trend Chart & Channel Breakdown -->
+    <section class="dashboard-grid-2">
+      <!-- Main Revenue / Order Trends Chart Card -->
+      <article class="card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2 class="card-title">Revenue & Orders Performance Trend</h2>
+            <span class="card-subtitle" id="main-chart-subtitle">Daily aggregate performance with prior period overlay</span>
+          </div>
+          <div class="card-actions">
+            <!-- Metric Toggle -->
+            <div class="segmented-group" id="chart-metric-toggle" role="radiogroup" aria-label="Metric toggle">
+              <button type="button" class="segmented-btn active" data-metric="revenue" role="radio" aria-checked="true">Revenue</button>
+              <button type="button" class="segmented-btn" data-metric="orders" role="radio" aria-checked="false">Orders</button>
+              <button type="button" class="segmented-btn" data-metric="aov" role="radio" aria-checked="false">AOV</button>
+            </div>
+            <!-- Aggregation Toggle -->
+            <div class="select-wrapper">
+              <select id="chart-agg-select" class="select-control" aria-label="Data Aggregation">
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+              <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <button id="btn-toggle-chart-table" class="btn btn-subtle btn-sm" type="button" title="View Accessible Table">
+              Table
+            </button>
+          </div>
+        </div>
+
+        <div class="main-chart-wrapper" id="main-chart-host">
+          <!-- Dynamic Responsive SVG Main Chart Injected Here -->
+          <svg id="main-svg" class="chart-svg-container" preserveAspectRatio="none" role="img" aria-label="Revenue performance interactive line chart"></svg>
+          <div id="chart-tooltip" class="chart-tooltip" role="tooltip"></div>
+          <!-- Accessible Data Table Fallback -->
+          <div id="chart-table-view" class="products-table-wrap" style="display:none; max-height:280px; overflow-y:auto;">
+            <table class="table-custom" id="chart-accessible-table">
+              <thead><tr><th>Date</th><th class="num-cell">Current Value</th><th class="num-cell">Prior Comparison</th><th class="num-cell">Variance</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </article>
+
+      <!-- Sales by Channel Donut Card -->
+      <article class="card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2 class="card-title">Sales by Channel</h2>
+            <span class="card-subtitle">Volume & revenue distribution across touchpoints</span>
+          </div>
+        </div>
+
+        <div class="donut-container">
+          <div class="donut-svg-wrap">
+            <svg id="donut-svg" width="180" height="180" viewBox="0 0 180 180" role="img" aria-label="Sales channels donut chart"></svg>
+            <div class="donut-center-text">
+              <div class="donut-center-val" id="donut-total-val">$0</div>
+              <div class="donut-center-lbl">Total Sales</div>
+            </div>
+          </div>
+          <div class="donut-legend" id="channel-legend">
+            <!-- Channel items rendered dynamically -->
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <!-- Secondary Analytics Grid (3 Columns): Categories, Regional, Order Status -->
+    <section class="dashboard-grid-3">
+      <!-- Card 1: Category Contribution -->
+      <article class="card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2 class="card-title">Sales by Category</h2>
+            <span class="card-subtitle">Volume ranking & product vertical share</span>
+          </div>
+        </div>
+        <div class="category-bars-list" id="category-bars-container">
+          <!-- Category bars dynamically generated -->
+        </div>
+      </article>
+
+      <!-- Card 2: Regional Performance -->
+      <article class="card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2 class="card-title">Regional Performance</h2>
+            <span class="card-subtitle">Global revenue & YoY regional acceleration</span>
+          </div>
+        </div>
+        <div class="regional-list" id="regional-list-container">
+          <!-- Regional rows dynamically generated -->
+        </div>
+      </article>
+
+      <!-- Card 3: Order Fulfillment & Status Breakdown -->
+      <article class="card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2 class="card-title">Fulfillment & Status</h2>
+            <span class="card-subtitle">Real-time lifecycle & processing efficiency</span>
+          </div>
+        </div>
+        <div class="category-bars-list" id="status-bars-container">
+          <!-- Status fulfillment distribution dynamically generated -->
+        </div>
+      </article>
+    </section>
+
+    <!-- Top Products Leaderboard Table -->
+    <section class="card" aria-label="Top Products Leaderboard">
+      <div class="card-header">
+        <div class="card-title-group">
+          <h2 class="card-title">Top Performing Products</h2>
+          <span class="card-subtitle">Best-selling items ranked by revenue, volume, and inventory health</span>
+        </div>
+      </div>
+      <div class="products-table-wrap">
+        <table class="table-custom" id="top-products-table">
+          <thead>
+            <tr>
+              <th style="width: 50px;">Rank</th>
+              <th>Product Details</th>
+              <th>Category</th>
+              <th class="num-cell">Price</th>
+              <th class="num-cell">Units Sold</th>
+              <th class="num-cell">Gross Revenue</th>
+              <th class="num-cell">Share</th>
+              <th>Stock Health</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Interactive Orders & Transactions Data Grid -->
+    <section class="card orders-section" aria-label="Orders and Transactions Grid">
+      <div class="card-header">
+        <div class="card-title-group">
+          <h2 class="card-title">Recent Transactions & Order Management</h2>
+          <span class="card-subtitle">Filterable live ledger of customer purchases, shipping status, and payment records</span>
+        </div>
+      </div>
+
+      <!-- Orders Toolbar: Search, Status Tabs, Filter Actions -->
+      <div class="orders-filter-bar">
+        <div class="search-input-wrap">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="search" id="order-search" class="search-input" placeholder="Search order ID, customer name, product..." aria-label="Search orders">
+        </div>
+
+        <div class="status-tabs" id="status-tab-group" role="tablist">
+          <button type="button" class="status-tab active" data-status="all" role="tab" aria-selected="true">
+            All <span class="status-count" id="count-all">0</span>
+          </button>
+          <button type="button" class="status-tab" data-status="Completed" role="tab" aria-selected="false">
+            Completed <span class="status-count" id="count-completed">0</span>
+          </button>
+          <button type="button" class="status-tab" data-status="Processing" role="tab" aria-selected="false">
+            Processing <span class="status-count" id="count-processing">0</span>
+          </button>
+          <button type="button" class="status-tab" data-status="Refunded" role="tab" aria-selected="false">
+            Refunded <span class="status-count" id="count-refunded">0</span>
+          </button>
+          <button type="button" class="status-tab" data-status="Cancelled" role="tab" aria-selected="false">
+            Cancelled <span class="status-count" id="count-cancelled">0</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Orders Table -->
+      <div class="products-table-wrap">
+        <table class="table-custom" id="orders-table">
+          <thead>
+            <tr>
+              <th data-sort="id" style="cursor: pointer;">Order ID ⇅</th>
+              <th data-sort="date" style="cursor: pointer;">Date & Time ⇅</th>
+              <th data-sort="customer" style="cursor: pointer;">Customer ⇅</th>
+              <th>Product / Line Items</th>
+              <th>Channel</th>
+              <th>Region</th>
+              <th data-sort="status" style="cursor: pointer;">Status ⇅</th>
+              <th data-sort="amount" class="num-cell" style="cursor: pointer;">Total Amount ⇅</th>
+              <th style="text-align: center;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="orders-tbody">
+            <!-- Orders rendered dynamically -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination Footer -->
+      <div class="pagination-bar">
+        <div class="pagination-info" id="pagination-info-text">
+          Showing <strong>1</strong> to <strong>15</strong> of <strong>0</strong> transactions
+        </div>
+        <div class="pagination-controls" id="pagination-buttons">
+          <!-- Page buttons rendered dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>Apex Business Intelligence v3.4 · Production Build · Powered by Antigravity Engine</p>
+      <p style="margin-top: 4px; color: var(--text-dim);">All metrics recalculated in real-time · Data deterministic benchmark seed: 20261030</p>
+    </footer>
+  </main>
+
+  <!-- Modal: Detailed Order Receipt View & Status Editor -->
+  <div id="modal-order-detail" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-detail-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modal-detail-title" class="modal-title">Transaction Details</h3>
+        <button type="button" class="btn btn-icon btn-subtle" id="btn-close-detail-modal" aria-label="Close dialog">✕</button>
+      </div>
+      <div class="modal-body" id="modal-detail-body">
+        <!-- Rendered dynamically -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn" id="btn-close-detail-action">Close</button>
+        <button type="button" class="btn btn-primary" id="btn-print-receipt">Print Receipt</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add New Transaction Simulator -->
+  <div id="modal-new-order" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-new-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modal-new-title" class="modal-title">Simulate New Transaction</h3>
+        <button type="button" class="btn btn-icon btn-subtle" id="btn-close-new-modal" aria-label="Close dialog">✕</button>
+      </div>
+      <form id="new-order-form">
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label" for="form-customer">Customer Full Name</label>
+              <input type="text" id="form-customer" class="form-input" placeholder="e.g. Elena Rostova" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="form-email">Customer Email</label>
+              <input type="email" id="form-email" class="form-input" placeholder="e.g. elena@example.com" required>
+            </div>
+            <div class="form-group-full">
+              <label class="form-label" for="form-product">Select Product</label>
+              <select id="form-product" class="form-input" required>
+                <!-- Populated via JS -->
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="form-qty">Quantity</label>
+              <input type="number" id="form-qty" class="form-input" min="1" max="50" value="1" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="form-channel">Sales Channel</label>
+              <select id="form-channel" class="form-input" required>
+                <option value="Direct E-Commerce">Direct E-Commerce</option>
+                <option value="B2B Enterprise Wholesale">B2B Wholesale</option>
+                <option value="Marketplace Partnerships">Marketplace</option>
+                <option value="Retail Flagship POS">Retail Stores</option>
+                <option value="Partner Affiliates">Affiliates</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="form-region">Region</label>
+              <select id="form-region" class="form-input" required>
+                <option value="North America">North America</option>
+                <option value="Europe">Europe</option>
+                <option value="Asia-Pacific">Asia-Pacific</option>
+                <option value="Latin America">Latin America</option>
+                <option value="Middle East & Africa">Middle East & Africa</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="form-status">Initial Status</label>
+              <select id="form-status" class="form-input" required>
+                <option value="Completed">Completed</option>
+                <option value="Processing">Processing</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" id="btn-cancel-new">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add & Update Dashboard</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Floating Toast Container -->
+  <div class="toast-container" id="toast-container" aria-live="polite"></div>
+
+  <!-- Dashboard JavaScript Engine -->
+  <script src="app.js"></script>
+</body>
+</html>
