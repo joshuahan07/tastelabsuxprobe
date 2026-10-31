@@ -1,0 +1,989 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Duebook: a to-do planner for tasks, deadlines and assignments, with reminders.">
+<meta name="theme-color" content="#eef1f6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e121b" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 28 28%22%3E%3Crect x=%222%22 y=%223%22 width=%2224%22 height=%2223%22 rx=%225%22 fill=%22%232741c9%22/%3E%3Cpath d=%22M8.5 17.5l3.5 3.5 7.5-8%22 fill=%22none%22 stroke=%22white%22 stroke-width=%222.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Duebook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: planner sidebar (views, courses, settings) beside a time-bucketed list; stacks to one column on phones with a floating add button. */
+:root {
+  --bg: #eef1f6;
+  --surface: #ffffff;
+  --surface-2: #f6f8fb;
+  --ink: #141a2b;
+  --muted: #5b6478;
+  --line: #dde2ec;
+  --accent: #2741c9;
+  --accent-ink: #ffffff;
+  --accent-soft: #e3e8fd;
+  --mark: #ffe45c;
+  --mark-ink: #3d3300;
+  --danger: #c4362b;
+  --danger-soft: #fbe6e4;
+  --warn: #a86200;
+  --warn-soft: #fff1d9;
+  --ok: #1e8a4c;
+  --ok-soft: #e0f3e8;
+  --dot-l: 48%;
+  --shadow: 0 1px 2px rgb(20 26 43 / .06), 0 8px 24px rgb(20 26 43 / .08);
+  --scrim: rgb(20 26 43 / .38);
+
+  --f-display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --f-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e121b; --surface: #161b27; --surface-2: #1b2130; --ink: #e7eaf2; --muted: #98a1b5;
+    --line: #283043; --accent: #8c9cff; --accent-ink: #0e121b; --accent-soft: #232b4d;
+    --mark: #57491a; --mark-ink: #ffe99a; --danger: #ff7b6e; --danger-soft: #3a1d1b;
+    --warn: #f2b45a; --warn-soft: #362a14; --ok: #5fd08f; --ok-soft: #16301f; --dot-l: 66%;
+    --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 8px 24px rgb(0 0 0 / .35); --scrim: rgb(0 0 0 / .55);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e121b; --surface: #161b27; --surface-2: #1b2130; --ink: #e7eaf2; --muted: #98a1b5;
+  --line: #283043; --accent: #8c9cff; --accent-ink: #0e121b; --accent-soft: #232b4d;
+  --mark: #57491a; --mark-ink: #ffe99a; --danger: #ff7b6e; --danger-soft: #3a1d1b;
+  --warn: #f2b45a; --warn-soft: #362a14; --ok: #5fd08f; --ok-soft: #16301f; --dot-l: 66%;
+  --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 8px 24px rgb(0 0 0 / .35); --scrim: rgb(0 0 0 / .55);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--f-body); -webkit-font-smoothing: antialiased; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; font-size: .86em; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.app {
+  display: grid; grid-template-columns: 248px minmax(0, 1fr);
+  grid-template-areas: "nav main" "foot main"; grid-template-rows: auto 1fr;
+  gap: 0 32px; max-width: 1180px; margin: 0 auto; padding: 28px 24px 96px;
+}
+.side-nav { grid-area: nav; display: grid; gap: 22px; align-content: start; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 24px); }
+.side-foot { grid-area: foot; align-self: start; display: grid; gap: 14px; padding-top: 22px; position: sticky; top: 420px; }
+main { grid-area: main; min-width: 0; display: grid; gap: 20px; align-content: start; }
+
+.brand { display: flex; align-items: center; gap: 10px; font: 700 22px/1 var(--f-display); letter-spacing: -.02em; }
+.brand svg { flex: none; }
+.label { font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 6px 10px; }
+
+.views { display: grid; gap: 2px; }
+.view-btn {
+  display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+  padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; font-weight: 500;
+}
+.view-btn svg { width: 18px; height: 18px; flex: none; color: var(--muted); }
+.view-btn:hover { background: var(--surface); }
+.view-btn[aria-current="true"] { background: var(--surface); box-shadow: var(--shadow); }
+.view-btn[aria-current="true"] svg { color: var(--accent); }
+.count { margin-left: auto; font: 500 12px var(--f-mono); color: var(--muted); }
+.count.hot { color: var(--danger); }
+
+.courses { display: grid; gap: 2px; }
+.course-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 6px 10px; border: 0; border-radius: 8px; background: transparent; text-align: left; font-size: 14px; }
+.course-btn:hover { background: var(--surface); }
+.course-btn[aria-pressed="true"] { background: var(--accent-soft); }
+.dot { width: 9px; height: 9px; border-radius: 50%; flex: none; background: hsl(var(--h) 62% var(--dot-l)); }
+.course-btn .name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.empty-note { font-size: 13px; color: var(--muted); margin: 0 10px; }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; display: grid; gap: 10px; font-size: 13.5px; }
+.panel h3 { margin: 0; font: 600 13px var(--f-body); }
+.panel p { margin: 0; color: var(--muted); }
+.row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.switch { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.switch input { width: 18px; height: 18px; accent-color: var(--accent); }
+.store-state { display: flex; gap: 8px; align-items: flex-start; font-size: 12.5px; color: var(--muted); }
+.store-state .led { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex: none; background: var(--muted); }
+.store-state.synced .led { background: var(--ok); }
+.store-state.local .led { background: var(--warn); }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--line); background: var(--surface); padding: 7px 12px; border-radius: 8px; font-weight: 500; font-size: 14px; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.ghost { border-color: transparent; background: transparent; }
+.btn.ghost:hover { background: var(--surface-2); }
+.btn.danger { color: var(--danger); }
+.btn.danger.armed { background: var(--danger); color: var(--surface); border-color: var(--danger); }
+.btn.sm { padding: 4px 9px; font-size: 13px; }
+.btn svg { width: 16px; height: 16px; }
+
+/* Header */
+.head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.head h1 { margin: 0; font: 700 clamp(28px, 4vw, 38px)/1.05 var(--f-display); letter-spacing: -.025em; text-wrap: balance; }
+.head .sub { margin: 4px 0 0; color: var(--muted); }
+.tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.search { position: relative; }
+.search input { width: 220px; max-width: 100%; padding: 8px 12px 8px 34px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.search svg { position: absolute; left: 10px; top: 50%; translate: 0 -50%; width: 16px; height: 16px; color: var(--muted); pointer-events: none; }
+
+/* Stats */
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); }
+.stat { padding: 14px 16px; display: grid; gap: 2px; border-left: 1px solid var(--line); min-width: 0; }
+.stat:first-child { border-left: 0; }
+.stat b { font: 700 26px/1.1 var(--f-display); font-variant-numeric: tabular-nums; }
+.stat span { font-size: 12.5px; color: var(--muted); }
+.stat.danger b { color: var(--danger); }
+.stat.warn b { color: var(--warn); }
+.stat.ok b { color: var(--ok); }
+.next-up { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--muted); flex-wrap: wrap; }
+.next-up strong { color: var(--ink); font-weight: 600; }
+.pill { display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.pill.mark { background: var(--mark); color: var(--mark-ink); }
+.pill.danger { background: var(--danger-soft); color: var(--danger); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.ok { background: var(--ok-soft); color: var(--ok); }
+.pill.soft { background: var(--surface-2); color: var(--muted); border: 1px solid var(--line); }
+
+/* Reminders */
+.alerts { display: grid; gap: 8px; }
+.alert { display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 12px; align-items: center; padding: 12px 14px; border-radius: var(--r); background: var(--mark); color: var(--mark-ink); box-shadow: var(--shadow); animation: pop .35s ease-out; }
+.alert svg { width: 22px; height: 22px; }
+.alert .t { font-weight: 600; }
+.alert .s { font-size: 13px; opacity: .85; }
+.alert .acts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.alert .btn { background: transparent; border-color: currentColor; color: inherit; }
+@keyframes pop { from { transform: translateY(-6px); opacity: .4; } }
+
+/* List */
+.groups { display: grid; gap: 22px; }
+.group h2 { display: flex; align-items: baseline; gap: 8px; margin: 0 0 8px; font: 600 13px var(--f-body); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.group h2 .mono { letter-spacing: 0; text-transform: none; }
+.group.overdue h2 { color: var(--danger); }
+.tasks { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.task { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 14px; border-top: 1px solid var(--line); position: relative; }
+.task:first-child { border-top: 0; }
+.task::before { content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; border-radius: 0 3px 3px 0; background: transparent; }
+.task.p-high::before { background: var(--danger); }
+.task.p-med::before { background: var(--warn); }
+.task:hover { background: var(--surface-2); }
+.check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line); background: var(--surface); display: grid; place-items: center; padding: 0; transition: border-color .15s, background .15s; }
+.check:hover { border-color: var(--ok); }
+.check svg { width: 13px; height: 13px; opacity: 0; color: var(--surface); }
+.task.done .check { background: var(--ok); border-color: var(--ok); }
+.task.done .check svg { opacity: 1; }
+.task.done .title { text-decoration: line-through; color: var(--muted); }
+.task-body { min-width: 0; background: none; border: 0; padding: 0; text-align: left; display: grid; gap: 3px; }
+.title { font-weight: 600; overflow-wrap: anywhere; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 12.5px; color: var(--muted); }
+.meta .course { display: inline-flex; align-items: center; gap: 6px; }
+.notes-preview { font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.due { text-align: right; display: grid; justify-items: end; gap: 2px; font-size: 13px; }
+.due .when { font-weight: 600; white-space: nowrap; }
+.due .when.overdue { color: var(--danger); }
+.due .when.soon { color: var(--warn); }
+.due .rel { color: var(--muted); font-size: 12px; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; }
+.due svg { width: 13px; height: 13px; }
+
+/* Board */
+.board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: start; }
+.col { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r); padding: 10px; display: grid; gap: 8px; min-width: 0; }
+.col h2 { margin: 2px 4px 2px; display: flex; align-items: center; gap: 8px; font: 600 13px var(--f-body); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 8px; }
+.card .top { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+.card .title { background: none; border: 0; padding: 0; text-align: left; font-weight: 600; }
+.card select { font-size: 12.5px; padding: 3px 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2); }
+.card .foot { display: flex; justify-content: space-between; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }
+.col .none { font-size: 13px; color: var(--muted); padding: 6px 4px; }
+
+/* Empty / loading */
+.empty { background: var(--surface); border: 1px dashed var(--line); border-radius: var(--r); padding: 36px 24px; text-align: center; display: grid; gap: 10px; justify-items: center; }
+.empty h2 { margin: 0; font: 700 22px var(--f-display); letter-spacing: -.015em; }
+.empty p { margin: 0; color: var(--muted); max-width: 46ch; }
+.empty .row { justify-content: center; margin-top: 6px; }
+
+/* Sheet */
+.scrim { position: fixed; inset: 0; background: var(--scrim); z-index: 40; display: grid; place-items: center; padding: 16px; animation: fade .15s ease-out; }
+@keyframes fade { from { opacity: 0; } }
+.sheet { width: min(560px, 100%); max-height: calc(100% - 32px); overflow: auto; background: var(--surface); border-radius: 14px; box-shadow: var(--shadow); padding: 20px; display: grid; gap: 16px; }
+.sheet h2 { margin: 0; font: 700 22px var(--f-display); letter-spacing: -.015em; }
+.sheet .x { justify-self: end; }
+.sheet-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.field { display: grid; gap: 5px; min-width: 0; }
+.field > span, .field legend { font-size: 13px; font-weight: 600; }
+.field input, .field select, .field textarea { width: 100%; padding: 9px 11px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); }
+.field textarea { min-height: 76px; resize: vertical; }
+.field .hint { font-size: 12.5px; color: var(--muted); font-weight: 400; }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+fieldset.field { border: 0; padding: 0; margin: 0; }
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg label { display: block; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg span { display: block; text-align: center; padding: 8px 4px; font-size: 14px; border-left: 1px solid var(--line); background: var(--surface-2); }
+.seg label:first-child span { border-left: 0; }
+.seg input:checked + span { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.seg input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: -2px; }
+.form-error { color: var(--danger); font-size: 13.5px; margin: 0; }
+.sheet-actions { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.sheet-actions .row { margin-left: auto; }
+
+/* Toast */
+.toasts { position: fixed; left: 50%; translate: -50% 0; bottom: calc(env(safe-area-inset-bottom, 0px) + 20px); z-index: 60; display: grid; gap: 8px; width: min(420px, calc(100% - 32px)); }
+.toast { background: var(--ink); color: var(--bg); padding: 10px 14px; border-radius: 10px; display: flex; gap: 12px; align-items: center; justify-content: space-between; box-shadow: var(--shadow); font-size: 14px; animation: pop .2s ease-out; }
+.toast button { background: none; border: 0; color: inherit; font-weight: 700; text-decoration: underline; padding: 0; }
+
+.fab { display: none; }
+.note { font-size: 13px; color: var(--muted); }
+.notice { padding: 10px 14px; border-radius: var(--r); background: var(--warn-soft); color: var(--warn); font-size: 13.5px; }
+
+@media (max-width: 860px) {
+  .app { grid-template-columns: minmax(0, 1fr); grid-template-areas: "nav" "main" "foot"; padding: 16px 16px 110px; gap: 18px; }
+  .side-nav, .side-foot { position: static; }
+  .side-foot { padding-top: 8px; }
+  .side-nav { gap: 14px; }
+  .views { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+  .view-btn { flex-direction: column; gap: 3px; padding: 8px 4px; font-size: 12.5px; text-align: center; background: var(--surface); border: 1px solid var(--line); }
+  .view-btn[aria-current="true"] { border-color: var(--accent); }
+  .view-btn .count { margin: 0; }
+  .side-nav .label { display: none; }
+  .courses { display: flex; flex-wrap: wrap; gap: 6px; }
+  .course-btn { width: auto; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 10px; font-size: 13px; }
+  .course-btn .count { margin-left: 2px; }
+  .empty-note { display: none; }
+  .head .tools .btn.primary { display: none; }
+  .search, .search input { width: 100%; }
+  .tools { width: 100%; }
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stat:nth-child(3) { border-left: 0; }
+  .stat:nth-child(n+3) { border-top: 1px solid var(--line); }
+  .board { grid-template-columns: minmax(0, 1fr); }
+  .fab { display: inline-flex; position: fixed; right: 16px; bottom: calc(env(safe-area-inset-bottom, 0px) + 18px); z-index: 30; padding: 13px 18px; border-radius: 999px; box-shadow: var(--shadow); font-size: 15px; }
+  .toasts { bottom: calc(env(safe-area-inset-bottom, 0px) + 84px); }
+  .scrim { place-items: end center; padding: 0; }
+  .sheet { border-radius: 16px 16px 0 0; max-height: 92%; padding: 18px 16px calc(env(safe-area-inset-bottom, 0px) + 18px); }
+}
+@media (max-width: 420px) {
+  .grid2 { grid-template-columns: minmax(0, 1fr); }
+  .task { grid-template-columns: auto minmax(0, 1fr); }
+  .due { grid-column: 2; text-align: left; justify-items: start; grid-auto-flow: column; gap: 8px; align-items: baseline; }
+  .alert { grid-template-columns: auto minmax(0, 1fr); }
+  .alert .acts { grid-column: 1 / -1; justify-content: flex-start; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before { animation: none !important; transition: none !important; } }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1" fill="currentColor"/><circle cx="4.5" cy="12" r="1" fill="currentColor"/><circle cx="4.5" cy="18" r="1" fill="currentColor"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-board" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="10" y="4" width="5" height="11" rx="1.5"/><rect x="17" y="4" width="4" height="7" rx="1.5"/></symbol>
+  <symbol id="i-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.6 2.5L16 9.5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+</svg>
+
+<div class="app" id="app">
+  <aside class="side-nav">
+    <div class="brand">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><rect x="2" y="3" width="24" height="23" rx="5" fill="var(--accent)"/><rect x="2" y="3" width="24" height="7" rx="5" fill="var(--ink)" opacity=".18"/><path d="M8.5 17.5l3.5 3.5 7.5-8" fill="none" stroke="var(--accent-ink)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Duebook
+    </div>
+    <nav aria-label="Views">
+      <p class="label">Views</p>
+      <div class="views" id="views"></div>
+    </nav>
+    <div>
+      <p class="label">Courses &amp; projects</p>
+      <div class="courses" id="courses"></div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="head">
+      <div>
+        <h1 id="viewTitle">Upcoming</h1>
+        <p class="sub" id="todayLine"></p>
+      </div>
+      <div class="tools">
+        <label class="search">
+          <span class="sr">Search tasks</span>
+          <svg><use href="#i-search"/></svg>
+          <input id="q" type="search" placeholder="Search tasks" autocomplete="off">
+        </label>
+        <button class="btn primary" data-act="new"><svg><use href="#i-plus"/></svg>New task</button>
+      </div>
+    </div>
+    <div class="alerts" id="alerts" aria-live="assertive"></div>
+    <section class="stats" id="stats" aria-label="Summary"></section>
+    <div class="next-up" id="nextUp"></div>
+    <div id="notice"></div>
+    <div id="content"></div>
+  </main>
+
+  <aside class="side-foot">
+    <div class="panel">
+      <h3>Reminders</h3>
+      <label class="switch"><span>Play a sound</span><input type="checkbox" id="soundToggle" checked></label>
+      <div class="row"><button class="btn sm" id="notifBtn">Allow desktop alerts</button><button class="btn sm ghost" id="testBtn">Test</button></div>
+      <p id="notifNote">Reminders appear at the top of the page while Duebook is open in any tab.</p>
+    </div>
+    <div class="panel">
+      <div class="store-state" id="storeState"><span class="led"></span><span>Connecting…</span></div>
+      <div class="row">
+        <button class="btn sm" id="exportBtn" hidden>Export CSV</button>
+        <button class="btn sm ghost" id="examplesBtn" hidden>Remove examples</button>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<button class="btn primary fab" data-act="new"><svg><use href="#i-plus"/></svg>New task</button>
+<div id="sheetRoot"></div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+(() => {
+"use strict";
+
+/* ---------- helpers ---------- */
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const uid = () => "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const MIN = 60e3, HOUR = 60 * MIN, DAY = 24 * HOUR;
+const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+const startOfDay = t => { const d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); };
+const HUES = [222, 12, 150, 38, 280, 190, 330, 96];
+let courseHues = {};
+const hueOf = s => courseHues[s] ?? HUES[0];
+const icon = (id, cls = "") => `<svg class="${cls}" aria-hidden="true"><use href="#i-${id}"/></svg>`;
+
+const KINDS = { assignment: "Assignment", exam: "Exam", reading: "Reading", task: "Task" };
+const STATUS = { todo: "Not started", doing: "In progress", done: "Done" };
+const REMIND = [[null, "No reminder"], [0, "At the deadline"], [15, "15 minutes before"], [60, "1 hour before"], [180, "3 hours before"], [1440, "1 day before"], [2880, "2 days before"]];
+
+const fmtTime = t => new Date(t).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+const fmtDay = t => {
+  const d0 = startOfDay(Date.now()), d = startOfDay(t), diff = Math.round((d - d0) / DAY);
+  if (diff === 0) return "Today";
+  if (diff === 1) return "Tomorrow";
+  if (diff === -1) return "Yesterday";
+  if (diff > 1 && diff < 7) return new Date(t).toLocaleDateString([], { weekday: "long" });
+  return new Date(t).toLocaleDateString([], { month: "short", day: "numeric", year: new Date(t).getFullYear() === new Date().getFullYear() ? undefined : "numeric" });
+};
+const fmtSpan = ms => {
+  const a = Math.abs(ms);
+  if (a < HOUR) return Math.max(1, Math.round(a / MIN)) + "m";
+  if (a < DAY) { const h = Math.floor(a / HOUR), m = Math.round((a % HOUR) / MIN); return h + "h" + (m && h < 6 ? " " + m + "m" : ""); }
+  const d = Math.floor(a / DAY), h = Math.round((a % DAY) / HOUR); return d + "d" + (h && d < 3 ? " " + h + "h" : "");
+};
+const relDue = t => { const ms = t - Date.now(); return ms < 0 ? fmtSpan(ms) + " overdue" : "in " + fmtSpan(ms); };
+const toDateInput = t => { const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+const toTimeInput = t => { const d = new Date(t); return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
+
+/* ---------- state ---------- */
+const S = {
+  tasks: [],
+  loaded: false,
+  view: lsGet("duebook.view", "upcoming"),
+  course: null,
+  q: "",
+  mode: "connecting", // connecting | synced | local
+  stale: false,
+  alerts: [],         // task ids with an active reminder banner
+  sound: lsGet("duebook.sound", true),
+};
+let store = null;
+let downloads = null;
+const inClaude = !!(window.claude && typeof window.claude.use === "function");
+
+/* ---------- storage ---------- */
+function localStore() {
+  const KEY = "duebook.tasks";
+  let mem = lsGet(KEY, []);
+  let cb = () => {};
+  const save = () => lsSet(KEY, mem);
+  return {
+    kind: "local",
+    subscribe(fn) { cb = fn; fn(mem.slice()); },
+    async put(t) { const i = mem.findIndex(x => x.id === t.id); if (i >= 0) mem[i] = t; else mem.push(t); save(); cb(mem.slice()); },
+    async remove(id) { mem = mem.filter(x => x.id !== id); save(); cb(mem.slice()); },
+  };
+}
+
+function dbStore(db, userId) {
+  const col = db.doc("data/users/" + userId + "/planner").collection("tasks");
+  const chains = new Map();
+  const queue = (id, fn) => {
+    const p = (chains.get(id) || Promise.resolve()).then(fn, fn);
+    chains.set(id, p.catch(() => {}));
+    return p;
+  };
+  const clean = t => { const o = {}; for (const [k, v] of Object.entries(t)) if (k !== "id" && v !== undefined) o[k] = v; return o; };
+  return {
+    kind: "db",
+    subscribe(fn, onErr) {
+      return col.onSnapshot(snap => fn(snap.docs.map(d => ({ id: d.id, ...d.data() })), snap.metadata), onErr);
+    },
+    put(t) { return queue(t.id, () => col.doc(t.id).set(clean(t))); },
+    remove(id) { return queue(id, () => col.doc(id).delete()); },
+  };
+}
+
+async function connect() {
+  let db = null, user = null;
+  if (inClaude) {
+    [db, user, downloads] = await Promise.all([
+      window.claude.use("db").catch(() => null),
+      window.claude.use("user").catch(() => null),
+      window.claude.use("downloads").catch(() => null),
+    ]);
+  }
+  const userId = user ? await user.id() : null;
+  if (db && userId) {
+    store = dbStore(db, userId);
+    S.mode = "synced";
+    const timer = setTimeout(() => { if (!S.loaded) { S.stale = true; render(); } }, 10000);
+    store.subscribe((tasks, meta) => {
+      S.tasks = tasks;
+      if (!meta || !meta.fromCache) { S.loaded = true; S.stale = false; clearTimeout(timer); }
+      else if (tasks.length) S.loaded = true;
+      render(); checkReminders();
+    }, err => {
+      clearTimeout(timer);
+      S.stale = false;
+      useLocal("Your account storage stopped responding (" + (err && err.code || "error") + "). New changes save in this browser only.");
+    });
+  } else {
+    useLocal();
+  }
+  renderStore();
+}
+function useLocal(msg) {
+  store = localStore();
+  S.mode = "local";
+  S.notice = msg || "";
+  store.subscribe(tasks => { S.tasks = tasks; S.loaded = true; render(); checkReminders(); });
+  renderStore();
+}
+
+async function saveTask(t) {
+  try { await store.put(t); }
+  catch (e) { toast(e && e.code === "quota_exceeded" ? "Storage is full. Delete some completed tasks, then try again." : "Couldn't save that change. Check your connection and try again."); }
+}
+async function deleteTask(id) {
+  try { await store.remove(id); } catch { toast("Couldn't delete that task. Try again."); }
+}
+// Optimistic local update so the UI responds before the store echoes back.
+function patch(id, changes) {
+  const t = S.tasks.find(x => x.id === id);
+  if (!t) return null;
+  const next = { ...t, ...changes, updatedAt: Date.now() };
+  S.tasks = S.tasks.map(x => x.id === id ? next : x);
+  render();
+  saveTask(next);
+  return next;
+}
+
+/* ---------- derived ---------- */
+const active = () => S.tasks.filter(t => t.status !== "done");
+function matches(t) {
+  if (S.course && (t.course || "") !== S.course) return false;
+  if (!S.q) return true;
+  const q = S.q.toLowerCase();
+  return [t.title, t.notes, t.course, KINDS[t.kind]].some(v => (v || "").toLowerCase().includes(q));
+}
+const byDue = (a, b) => (a.due ?? Infinity) - (b.due ?? Infinity) || ({ high: 0, med: 1, low: 2 }[a.priority] ?? 1) - ({ high: 0, med: 1, low: 2 }[b.priority] ?? 1) || (a.createdAt || 0) - (b.createdAt || 0);
+
+function buckets(list) {
+  const now = Date.now(), d0 = startOfDay(now);
+  const g = { overdue: [], today: [], tomorrow: [], week: [], later: [], nodate: [] };
+  for (const t of list) {
+    if (t.due == null) g.nodate.push(t);
+    else if (t.due < now) g.overdue.push(t);
+    else if (t.due < d0 + DAY) g.today.push(t);
+    else if (t.due < d0 + 2 * DAY) g.tomorrow.push(t);
+    else if (t.due < d0 + 7 * DAY) g.week.push(t);
+    else g.later.push(t);
+  }
+  for (const k in g) g[k].sort(byDue);
+  return g;
+}
+
+/* ---------- render ---------- */
+const VIEWS = [
+  ["upcoming", "Upcoming", "list"],
+  ["today", "Today", "sun"],
+  ["assignments", "Assignments", "board"],
+  ["completed", "Completed", "done"],
+];
+
+function render() {
+  const now = Date.now(), d0 = startOfDay(now);
+  const act = active();
+  const counts = {
+    upcoming: act.length,
+    today: act.filter(t => t.due != null && t.due < d0 + DAY).length,
+    assignments: act.filter(t => t.kind === "assignment" || t.kind === "exam").length,
+    completed: S.tasks.length - act.length,
+  };
+  const overdueN = act.filter(t => t.due != null && t.due < now).length;
+
+  $("#views").innerHTML = VIEWS.map(([k, label, ic]) =>
+    `<button class="view-btn" data-view="${k}" aria-current="${S.view === k}">${icon(ic)}<span>${label}</span><span class="count ${k === "today" && overdueN ? "hot" : ""}">${counts[k]}</span></button>`).join("");
+
+  const courses = {};
+  for (const t of S.tasks) if (t.course) courses[t.course] = (courses[t.course] || 0) + (t.status !== "done" ? 1 : 0);
+  const names = Object.keys(courses).sort((a, b) => a.localeCompare(b));
+  courseHues = Object.fromEntries(names.map((n, i) => [n, HUES[i % HUES.length]]));
+  if (S.course && !names.includes(S.course)) S.course = null;
+  $("#courses").innerHTML = names.length
+    ? names.map(n => `<button class="course-btn" data-course="${esc(n)}" aria-pressed="${S.course === n}"><span class="dot" style="--h:${hueOf(n)}"></span><span class="name">${esc(n)}</span><span class="count">${courses[n]}</span></button>`).join("")
+    : `<p class="empty-note">Give a task a course or project and it shows up here as a filter.</p>`;
+
+  const title = VIEWS.find(v => v[0] === S.view)[1];
+  $("#viewTitle").textContent = S.course ? `${title} · ${S.course}` : title;
+  $("#todayLine").textContent = new Date().toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" });
+
+  // Stats
+  const weekEnd = d0 + 7 * DAY;
+  const weekStart = d0 - ((new Date(d0).getDay() + 6) % 7) * DAY;
+  const doneWeek = S.tasks.filter(t => t.status === "done" && (t.completedAt || 0) >= weekStart).length;
+  const dueToday = act.filter(t => t.due != null && t.due >= now && t.due < d0 + DAY).length;
+  const next7 = act.filter(t => t.due != null && t.due >= now && t.due < weekEnd).length;
+  $("#stats").innerHTML = [
+    ["Overdue", overdueN, overdueN ? "danger" : ""],
+    ["Due today", dueToday, dueToday ? "warn" : ""],
+    ["Due in 7 days", next7, ""],
+    ["Done this week", doneWeek, doneWeek ? "ok" : ""],
+  ].map(([l, n, c]) => `<div class="stat ${c}"><b>${n}</b><span>${l}</span></div>`).join("");
+
+  const next = act.filter(t => t.due != null && t.due >= now).sort(byDue)[0];
+  $("#nextUp").innerHTML = next
+    ? `<span class="pill mark">Next up</span><span><strong>${esc(next.title)}</strong> · ${fmtDay(next.due)} ${fmtTime(next.due)} <span class="mono">(${relDue(next.due)})</span></span>`
+    : "";
+
+  const notes = [];
+  if (S.stale) notes.push("Your saved tasks can't be reached yet. Changes will appear once the connection returns.");
+  if (S.notice) notes.push(S.notice);
+  $("#notice").innerHTML = notes.map(n => `<div class="notice">${esc(n)}</div>`).join("");
+
+  renderContent(act);
+  renderAlerts();
+  renderStore();
+  document.title = (S.alerts.length ? `(${S.alerts.length}) ` : "") + "Duebook";
+}
+
+function renderContent(act) {
+  const el = $("#content");
+  if (!S.loaded) { el.innerHTML = `<div class="empty"><h2>Loading your tasks…</h2><p>Duebook is fetching what you've saved.</p></div>`; return; }
+  if (!S.tasks.length) {
+    el.innerHTML = `<div class="empty">
+      <h2>Nothing due yet</h2>
+      <p>Add your first task with a deadline and a reminder. Tasks land in Overdue, Today, Tomorrow and This week automatically, and assignments get their own progress board.</p>
+      <div class="row"><button class="btn primary" data-act="new">${icon("plus")}Add a task</button><button class="btn" data-act="examples">Load example tasks</button></div>
+    </div>`;
+    return;
+  }
+  if (S.view === "assignments") return renderBoard(el);
+  if (S.view === "completed") return renderCompleted(el);
+
+  const list = act.filter(matches);
+  const g = buckets(list);
+  const order = S.view === "today"
+    ? [["overdue", "Overdue"], ["today", "Due today"]]
+    : [["overdue", "Overdue"], ["today", "Today"], ["tomorrow", "Tomorrow"], ["week", "This week"], ["later", "Later"], ["nodate", "No due date"]];
+  const html = order.filter(([k]) => g[k].length).map(([k, label]) =>
+    `<section class="group ${k}"><h2>${label} <span class="mono">${g[k].length}</span></h2><ul class="tasks">${g[k].map(taskRow).join("")}</ul></section>`).join("");
+  el.innerHTML = html ? `<div class="groups">${html}</div>` : emptyFiltered(S.view === "today" ? "Nothing due today. Check Upcoming for what's next." : "No open tasks match.");
+}
+
+function emptyFiltered(msg) {
+  return `<div class="empty"><h2>All clear</h2><p>${esc(msg)}</p>${S.q || S.course ? `<div class="row"><button class="btn" data-act="clearFilters">Clear filters</button></div>` : ""}</div>`;
+}
+
+function dueBlock(t) {
+  if (t.due == null) return `<div class="due"><span class="rel">No date</span></div>`;
+  const ms = t.due - Date.now();
+  const cls = t.status === "done" ? "" : ms < 0 ? "overdue" : ms < DAY ? "soon" : "";
+  return `<div class="due"><span class="when ${cls}">${fmtDay(t.due)} <span class="mono">${fmtTime(t.due)}</span></span>
+    <span class="rel">${t.remind != null && t.status !== "done" ? `${icon("bell")}<span class="sr">Reminder set.</span>` : ""}${t.status === "done" ? "" : relDue(t.due)}</span></div>`;
+}
+
+function taskMeta(t) {
+  const bits = [];
+  if (t.course) bits.push(`<span class="course"><span class="dot" style="--h:${hueOf(t.course)}"></span>${esc(t.course)}</span>`);
+  bits.push(`<span>${KINDS[t.kind] || "Task"}</span>`);
+  if (t.status === "doing") bits.push(`<span class="pill warn">In progress</span>`);
+  if (t.priority === "high") bits.push(`<span class="pill danger">High priority</span>`);
+  if (t.example) bits.push(`<span class="pill soft">Example</span>`);
+  return bits.join("");
+}
+
+function taskRow(t) {
+  return `<li class="task p-${t.priority || "med"} ${t.status === "done" ? "done" : ""}">
+    <button class="check" data-toggle="${t.id}" aria-label="${t.status === "done" ? "Mark not done" : "Mark done"}: ${esc(t.title)}">${icon("check")}</button>
+    <button class="task-body" data-edit="${t.id}">
+      <span class="title">${esc(t.title)}</span>
+      <span class="meta">${taskMeta(t)}</span>
+      ${t.notes ? `<span class="notes-preview">${esc(t.notes)}</span>` : ""}
+    </button>
+    ${dueBlock(t)}
+  </li>`;
+}
+
+function renderBoard(el) {
+  const items = S.tasks.filter(t => (t.kind === "assignment" || t.kind === "exam") && matches(t));
+  if (!items.length) { el.innerHTML = emptyFiltered("No assignments or exams yet. Set a task's type to Assignment to track its progress here."); return; }
+  const cols = [["todo", "Not started"], ["doing", "In progress"], ["done", "Done"]];
+  el.innerHTML = `<div class="board">${cols.map(([k, label]) => {
+    let list = items.filter(t => (t.status || "todo") === k);
+    list = k === "done" ? list.sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0)) : list.sort(byDue);
+    return `<section class="col"><h2>${label} <span class="mono">${list.length}</span></h2>
+      ${list.length ? list.map(card).join("") : `<p class="none">${k === "doing" ? "Move an assignment here when you start it." : k === "done" ? "Submitted work lands here." : "Nothing waiting."}</p>`}
+    </section>`;
+  }).join("")}</div>`;
+}
+
+function card(t) {
+  const ms = t.due != null ? t.due - Date.now() : null;
+  const pill = t.status === "done" ? `<span class="pill ok">Done</span>`
+    : ms == null ? `<span class="pill soft">No date</span>`
+    : ms < 0 ? `<span class="pill danger">${fmtSpan(ms)} late</span>`
+    : ms < DAY ? `<span class="pill warn">Due ${relDue(t.due)}</span>`
+    : `<span class="pill soft">${relDue(t.due)}</span>`;
+  return `<article class="card">
+    <div class="top"><button class="title" data-edit="${t.id}">${esc(t.title)}</button>${pill}</div>
+    <div class="meta">${t.course ? `<span class="course"><span class="dot" style="--h:${hueOf(t.course)}"></span>${esc(t.course)}</span>` : ""}<span>${KINDS[t.kind]}</span>${t.example ? `<span class="pill soft">Example</span>` : ""}</div>
+    <div class="foot"><span>${t.due != null ? `${fmtDay(t.due)} <span class="mono">${fmtTime(t.due)}</span>` : ""}</span>
+      <label><span class="sr">Status for ${esc(t.title)}</span><select data-status="${t.id}">${Object.entries(STATUS).map(([k, v]) => `<option value="${k}" ${k === (t.status || "todo") ? "selected" : ""}>${v}</option>`).join("")}</select></label>
+    </div>
+  </article>`;
+}
+
+let clearArmed = false;
+function renderCompleted(el) {
+  const list = S.tasks.filter(t => t.status === "done" && matches(t)).sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0));
+  if (!list.length) { el.innerHTML = emptyFiltered("Finished tasks show up here. Tick the circle next to a task to complete it."); return; }
+  el.innerHTML = `<div class="groups"><section class="group">
+    <h2>Finished <span class="mono">${list.length}</span><span style="margin-left:auto"></span><button class="btn sm danger ${clearArmed ? "armed" : ""}" data-act="clearDone">${clearArmed ? "Tap again to delete all" : "Delete completed"}</button></h2>
+    <ul class="tasks">${list.map(taskRow).join("")}</ul></section></div>`;
+}
+
+function renderStore() {
+  const el = $("#storeState");
+  const map = {
+    connecting: ["", "Connecting to your saved tasks…"],
+    synced: ["synced", "Saved to your claude.ai account. Open this link on any device to see the same tasks."],
+    local: ["local", inClaude ? "Saved in this browser only. Sign in to claude.ai and open the link to sync across devices." : "Saved in this browser on this device. Use Export CSV to keep a copy."],
+  };
+  const [cls, txt] = map[S.mode];
+  el.className = "store-state " + cls;
+  el.innerHTML = `<span class="led"></span><span>${txt}</span>`;
+  $("#exportBtn").hidden = (inClaude && !downloads) || !S.tasks.length;
+  $("#examplesBtn").hidden = !S.tasks.some(t => t.example);
+}
+
+/* ---------- reminders ---------- */
+function triggerAt(t) {
+  if (t.status === "done" || t.due == null || t.remind == null) return null;
+  return t.snoozeUntil || (t.due - t.remind * MIN);
+}
+function checkReminders() {
+  if (!S.loaded) return;
+  const now = Date.now();
+  let fresh = 0;
+  for (const t of S.tasks) {
+    const at = triggerAt(t);
+    if (at == null || at > now || t.firedAt === at) continue;
+    if (!S.alerts.includes(t.id)) { S.alerts.push(t.id); fresh++; }
+    systemNotify(t);
+    patch(t.id, { firedAt: at });
+  }
+  // Drop banners for tasks that were completed or deleted elsewhere.
+  S.alerts = S.alerts.filter(id => { const t = S.tasks.find(x => x.id === id); return t && t.status !== "done"; });
+  if (fresh) { chime(); render(); }
+}
+function renderAlerts() {
+  const list = S.alerts.map(id => S.tasks.find(t => t.id === id)).filter(Boolean);
+  const shown = list.slice(0, 3);
+  $("#alerts").innerHTML = shown.map(t => `<div class="alert" role="alert">
+      ${icon("bell")}
+      <div><div class="t">${esc(t.title)}</div><div class="s">Due ${fmtDay(t.due)} at ${fmtTime(t.due)} · ${relDue(t.due)}</div></div>
+      <div class="acts"><button class="btn sm" data-alert-done="${t.id}">Mark done</button><button class="btn sm" data-snooze="${t.id}">Snooze 10 min</button><button class="btn sm" data-dismiss="${t.id}">Dismiss</button></div>
+    </div>`).join("") + (list.length > 3 ? `<p class="note">${list.length - 3} more reminders waiting.</p>` : "");
+}
+
+let audioCtx = null;
+function unlockAudio() {
+  if (audioCtx) return;
+  try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch {}
+}
+function chime() {
+  if (!S.sound || !audioCtx) return;
+  try {
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    const t0 = audioCtx.currentTime;
+    [880, 1318.5].forEach((f, i) => {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = "sine"; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t0 + i * 0.18);
+      g.gain.exponentialRampToValueAtTime(0.25, t0 + i * 0.18 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + i * 0.18 + 0.6);
+      o.connect(g).connect(audioCtx.destination);
+      o.start(t0 + i * 0.18); o.stop(t0 + i * 0.18 + 0.65);
+    });
+  } catch {}
+}
+function notifSupported() { try { return "Notification" in window; } catch { return false; } }
+function systemNotify(t) {
+  try {
+    if (notifSupported() && Notification.permission === "granted")
+      new Notification("Due " + relDue(t.due) + ": " + t.title, { body: `${fmtDay(t.due)} at ${fmtTime(t.due)}${t.course ? " · " + t.course : ""}`, tag: t.id });
+  } catch {}
+}
+function renderNotif() {
+  const btn = $("#notifBtn"), note = $("#notifNote");
+  let perm = "unsupported";
+  try { if (notifSupported()) perm = Notification.permission; } catch {}
+  btn.hidden = perm !== "default";
+  note.textContent = perm === "granted"
+    ? "Desktop alerts are on. Reminders also appear at the top of the page."
+    : "Reminders appear at the top of the page, with a sound, while Duebook is open in a tab.";
+}
+
+/* ---------- sheet (add / edit) ---------- */
+let editing = null, deleteArmed = false;
+function openSheet(id, preset = {}) {
+  unlockAudio();
+  const t = id ? S.tasks.find(x => x.id === id) : null;
+  editing = t ? t.id : null; deleteArmed = false;
+  const now = Date.now();
+  const due = t ? t.due : (preset.due ?? null);
+  const v = t || { title: "", notes: "", course: S.course || "", kind: "assignment", priority: "med", remind: 60, status: "todo" };
+  const courses = [...new Set(S.tasks.map(x => x.course).filter(Boolean))];
+  $("#sheetRoot").innerHTML = `<div class="scrim" data-scrim>
+    <form class="sheet" id="taskForm" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" novalidate>
+      <div class="sheet-head"><h2 id="sheetTitle">${t ? "Edit task" : "New task"}</h2><button type="button" class="btn ghost sm" data-act="close" aria-label="Close">${icon("x")}</button></div>
+      <label class="field"><span>What needs doing?</span><input id="f-title" required maxlength="200" value="${esc(v.title)}" placeholder="Problem set 4, lab report, read chapter 7…"></label>
+      <div class="grid2">
+        <label class="field"><span>Type</span><select id="f-kind">${Object.entries(KINDS).map(([k, l]) => `<option value="${k}" ${v.kind === k ? "selected" : ""}>${l}</option>`).join("")}</select></label>
+        <label class="field"><span>Course or project</span><input id="f-course" list="courseList" maxlength="60" value="${esc(v.course)}" placeholder="e.g. CSE 247"><datalist id="courseList">${courses.map(c => `<option value="${esc(c)}"></option>`).join("")}</datalist></label>
+      </div>
+      <div class="grid2">
+        <label class="field"><span>Due date</span><input id="f-date" type="date" value="${due != null ? toDateInput(due) : ""}"></label>
+        <label class="field"><span>Due time <span class="hint">(defaults to 11:59 PM)</span></span><input id="f-time" type="time" value="${due != null ? toTimeInput(due) : ""}"></label>
+      </div>
+      <div class="grid2">
+        <label class="field"><span>Remind me</span><select id="f-remind">${REMIND.map(([m, l]) => `<option value="${m ?? ""}" ${(v.remind ?? null) === m ? "selected" : ""}>${l}</option>`).join("")}</select></label>
+        <label class="field"><span>Status</span><select id="f-status">${Object.entries(STATUS).map(([k, l]) => `<option value="${k}" ${(v.status || "todo") === k ? "selected" : ""}>${l}</option>`).join("")}</select></label>
+      </div>
+      <fieldset class="field"><legend>Priority</legend>
+        <div class="seg">${[["low", "Low"], ["med", "Medium"], ["high", "High"]].map(([k, l]) => `<label><input type="radio" name="prio" id="f-prio-${k}" value="${k}" ${(v.priority || "med") === k ? "checked" : ""}><span>${l}</span></label>`).join("")}</div>
+      </fieldset>
+      <label class="field"><span>Notes</span><textarea id="f-notes" maxlength="2000" placeholder="Rubric link, page numbers, who you're working with…">${esc(v.notes)}</textarea></label>
+      <p class="form-error" id="f-error" hidden></p>
+      <div class="sheet-actions">
+        ${t ? `<button type="button" class="btn danger" data-act="delete">Delete</button>` : ""}
+        <div class="row"><button type="button" class="btn ghost" data-act="close">Cancel</button><button type="submit" class="btn primary">${t ? "Save changes" : "Add task"}</button></div>
+      </div>
+    </form></div>`;
+  setTimeout(() => $("#f-title").focus(), 30);
+}
+function closeSheet() { $("#sheetRoot").innerHTML = ""; editing = null; }
+
+function submitSheet(e) {
+  e.preventDefault();
+  const err = $("#f-error");
+  const title = $("#f-title").value.trim();
+  const date = $("#f-date").value, time = $("#f-time").value;
+  const remindRaw = $("#f-remind").value;
+  let remind = remindRaw === "" ? null : Number(remindRaw);
+  const show = m => { err.textContent = m; err.hidden = false; };
+  if (!title) { show("Give the task a name."); $("#f-title").focus(); return; }
+  if (time && !date) { show("Pick a due date to go with the time."); $("#f-date").focus(); return; }
+  let due = null;
+  if (date) {
+    const [y, mo, d] = date.split("-").map(Number);
+    const [h, mi] = (time || "23:59").split(":").map(Number);
+    due = new Date(y, mo - 1, d, h, mi).getTime();
+    if (isNaN(due)) { show("That date isn't valid. Pick it again from the calendar."); return; }
+  }
+  if (due == null) remind = null; // reminders are relative to the deadline
+
+  const prev = editing ? S.tasks.find(x => x.id === editing) : null;
+  const status = $("#f-status").value;
+  const t = {
+    ...(prev || { id: uid(), createdAt: Date.now() }),
+    title, due, remind, status,
+    kind: $("#f-kind").value,
+    course: $("#f-course").value.trim(),
+    priority: (document.querySelector('input[name="prio"]:checked') || {}).value || "med",
+    notes: $("#f-notes").value.trim(),
+    updatedAt: Date.now(),
+  };
+  if (status === "done" && !(prev && prev.status === "done")) t.completedAt = Date.now();
+  if (status !== "done") t.completedAt = null;
+  if (!prev || prev.due !== due || prev.remind !== remind) { t.snoozeUntil = null; t.firedAt = null; }
+  // A reminder whose time already passed when it was set fires right away; that's intentional.
+  if (prev) S.tasks = S.tasks.map(x => x.id === t.id ? t : x); else S.tasks = [...S.tasks, t];
+  S.alerts = S.alerts.filter(id => id !== t.id || triggerAt(t) === t.firedAt);
+  closeSheet();
+  render();
+  saveTask(t).then(checkReminders);
+  toast(prev ? "Saved" : (due ? `Added. Due ${fmtDay(due)} at ${fmtTime(due)}.` : "Added"));
+}
+
+/* ---------- actions ---------- */
+function toggleDone(id) {
+  const t = S.tasks.find(x => x.id === id);
+  if (!t) return;
+  const wasDone = t.status === "done";
+  const prevStatus = t.prevStatus || "todo";
+  patch(id, wasDone ? { status: prevStatus, completedAt: null } : { status: "done", completedAt: Date.now(), prevStatus: t.status || "todo" });
+  S.alerts = S.alerts.filter(x => x !== id);
+  render();
+  if (!wasDone) toast(`Done: ${t.title}`, "Undo", () => patch(id, { status: t.status || "todo", completedAt: null }));
+}
+
+function loadExamples() {
+  const d0 = startOfDay(Date.now());
+  const at = (days, h, m = 0) => d0 + days * DAY + h * HOUR + m * MIN;
+  const base = { notes: "", example: true, createdAt: Date.now(), updatedAt: Date.now(), status: "todo", priority: "med" };
+  const items = [
+    { title: "Problem set 4: graph algorithms", course: "CSE 247", kind: "assignment", due: at(0, 23, 59), remind: 180, priority: "high", status: "doing", notes: "Questions 3 and 5 need proofs." },
+    { title: "Lab report: titration", course: "CHEM 151", kind: "assignment", due: at(1, 17), remind: 1440 },
+    { title: "Read chapters 7–8", course: "PHIL 120", kind: "reading", due: at(2, 9, 30), remind: 60, priority: "low" },
+    { title: "Midterm exam", course: "MATH 233", kind: "exam", due: at(5, 10), remind: 2880, priority: "high", notes: "Room 112. Covers sections 12.1–13.4." },
+    { title: "Essay outline", course: "WRIT 1", kind: "assignment", due: at(-1, 23, 59), remind: null, priority: "high" },
+    { title: "Email advisor about spring schedule", course: "", kind: "task", due: at(3, 12), remind: 15 },
+    { title: "Quiz 2 corrections", course: "MATH 233", kind: "assignment", due: at(-3, 12), status: "done", completedAt: Date.now() - DAY, remind: null },
+    { title: "Renew library books", course: "", kind: "task", due: null, remind: null, priority: "low" },
+  ];
+  items.forEach(it => {
+    const t = { ...base, ...it, id: uid() };
+    // Mark reminders that would already be in the past as fired, so loading samples doesn't ring a bell.
+    const at0 = triggerAt(t); if (at0 != null && at0 <= Date.now()) t.firedAt = at0;
+    S.tasks.push(t); saveTask(t);
+  });
+  render();
+  toast("Added 8 example tasks, tagged Example. Remove them from the sidebar anytime.");
+}
+
+async function exportCsv() {
+  const cols = ["title", "course", "type", "status", "priority", "due", "notes"];
+  const q = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const rows = S.tasks.slice().sort(byDue).map(t => [t.title, t.course, KINDS[t.kind], STATUS[t.status || "todo"], t.priority, t.due != null ? new Date(t.due).toLocaleString() : "", t.notes].map(q).join(","));
+  const data = [cols.join(","), ...rows].join("\n");
+  if (!downloads) {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([data], { type: "text/csv" }));
+    a.download = "duebook-tasks.csv"; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    return;
+  }
+  try { await downloads.save({ filename: "duebook-tasks.csv", data }); }
+  catch (e) { if (!e || e.code !== "declined") toast("Export isn't available here."); }
+}
+
+/* ---------- toasts ---------- */
+function toast(msg, actLabel, act) {
+  const el = document.createElement("div");
+  el.className = "toast";
+  el.innerHTML = `<span></span>`;
+  el.firstChild.textContent = msg;
+  if (actLabel) {
+    const b = document.createElement("button"); b.textContent = actLabel;
+    b.onclick = () => { act(); el.remove(); };
+    el.appendChild(b);
+  }
+  $("#toasts").appendChild(el);
+  setTimeout(() => el.remove(), actLabel ? 6000 : 3200);
+}
+
+/* ---------- events ---------- */
+document.addEventListener("click", e => {
+  unlockAudio();
+  const b = e.target.closest("button, [data-scrim]");
+  if (!b) return;
+  if (b.matches("[data-scrim]")) { if (e.target === b) closeSheet(); return; }
+  const d = b.dataset;
+  if (d.view) { S.view = d.view; lsSet("duebook.view", S.view); clearArmed = false; render(); return; }
+  if (d.course !== undefined) { S.course = S.course === d.course ? null : d.course; render(); return; }
+  if (d.toggle) return toggleDone(d.toggle);
+  if (d.edit) return openSheet(d.edit);
+  if (d.alertDone) return toggleDone(d.alertDone);
+  if (d.snooze) { S.alerts = S.alerts.filter(x => x !== d.snooze); patch(d.snooze, { snoozeUntil: Date.now() + 10 * MIN }); toast("Snoozed for 10 minutes"); return; }
+  if (d.dismiss) { S.alerts = S.alerts.filter(x => x !== d.dismiss); render(); return; }
+  switch (d.act) {
+    case "new": return openSheet(null);
+    case "close": return closeSheet();
+    case "examples": return loadExamples();
+    case "clearFilters": S.q = ""; $("#q").value = ""; S.course = null; return render();
+    case "delete":
+      if (!deleteArmed) { deleteArmed = true; b.classList.add("armed"); b.textContent = "Tap again to delete"; return; }
+      { const id = editing, t = S.tasks.find(x => x.id === id); closeSheet(); S.tasks = S.tasks.filter(x => x.id !== id); S.alerts = S.alerts.filter(x => x !== id); render(); deleteTask(id);
+        if (t) toast("Deleted", "Undo", () => { S.tasks.push(t); render(); saveTask(t); }); }
+      return;
+    case "clearDone":
+      if (!clearArmed) { clearArmed = true; render(); setTimeout(() => { if (clearArmed) { clearArmed = false; render(); } }, 4000); return; }
+      clearArmed = false;
+      { const done = S.tasks.filter(t => t.status === "done" && matches(t)); S.tasks = S.tasks.filter(t => !done.includes(t)); render(); done.forEach(t => deleteTask(t.id)); toast(`Deleted ${done.length} completed task${done.length === 1 ? "" : "s"}`); }
+      return;
+  }
+});
+document.addEventListener("change", e => {
+  const s = e.target.closest("[data-status]");
+  if (s) {
+    const st = s.value, t = S.tasks.find(x => x.id === s.dataset.status);
+    patch(s.dataset.status, { status: st, completedAt: st === "done" ? Date.now() : null, prevStatus: st === "done" ? (t && t.status) || "todo" : undefined });
+  }
+});
+document.addEventListener("submit", e => { if (e.target.id === "taskForm") submitSheet(e); });
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && $("#sheetRoot").firstChild) closeSheet();
+  if (e.key === "n" && !e.metaKey && !e.ctrlKey && !e.altKey && !/input|textarea|select/i.test(document.activeElement.tagName) && !$("#sheetRoot").firstChild) { e.preventDefault(); openSheet(null); }
+});
+$("#q").addEventListener("input", e => { S.q = e.target.value.trim(); render(); });
+$("#soundToggle").checked = S.sound;
+$("#soundToggle").addEventListener("change", e => { S.sound = e.target.checked; lsSet("duebook.sound", S.sound); });
+$("#notifBtn").addEventListener("click", async () => {
+  try { await Notification.requestPermission(); } catch {}
+  renderNotif();
+  let perm = "unsupported"; try { perm = Notification.permission; } catch {}
+  if (perm !== "granted") toast("Desktop alerts aren't available in this view. In-page reminders still work.");
+});
+$("#testBtn").addEventListener("click", () => {
+  unlockAudio();
+  const prev = S.sound; S.sound = true; setTimeout(chime, 30); S.sound = prev;
+  toast(S.sound ? "This is how a reminder sounds." : "Sound is off. Turn on Play a sound to hear reminders.");
+});
+$("#exportBtn").addEventListener("click", exportCsv);
+$("#examplesBtn").addEventListener("click", () => {
+  const ex = S.tasks.filter(t => t.example);
+  S.tasks = S.tasks.filter(t => !t.example); S.alerts = S.alerts.filter(id => S.tasks.some(t => t.id === id));
+  render(); ex.forEach(t => deleteTask(t.id)); toast(`Removed ${ex.length} example tasks`);
+});
+
+setInterval(() => { checkReminders(); render(); }, 30000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) { checkReminders(); render(); } });
+setInterval(checkReminders, 10000);
+
+renderNotif();
+render();
+connect().catch(() => useLocal());
+})();
+</script>
+
+</body>
+</html>
