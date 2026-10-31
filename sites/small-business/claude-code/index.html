@@ -1,0 +1,963 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ninebark Coffee</title>
+<meta name="description" content="Ninebark Coffee — neighborhood espresso bar and roaster at 418 Alder Street. Menu, prices, reviews, hours and contact.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Martian+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a roaster's bag label — giant condensed wordmark up top, then a price list of
+   illustrated "tickets", a pour-over board with real origin data, reviews, and a map card. */
+:root {
+  --paper: #F1F4EF;      /* green-biased off-white */
+  --surface: #FFFFFF;
+  --ink: #16251E;        /* ninebark leaf, nearly black */
+  --leaf: #2E4A3C;
+  --muted: #56665D;
+  --line: #D3DBD3;
+  --bark: #8C2C3B;       /* ninebark's burgundy foliage: the one accent */
+  --bark-ink: #FFFFFF;
+  --plate: #E1E8E0;
+  --ok: #2D7A4B;
+  --closed: #9A3A2C;
+
+  /* illustration palette (drawn on plates, so constant across themes) */
+  --ill-stroke: #16251E;
+  --cup: #FBFBF8;
+  --coffee: #4A2B1E;
+  --crema: #C78F55;
+  --foam: #F2E6D3;
+  --glass: rgba(205, 225, 222, .55);
+  --pastry: #D9A15A;
+  --pastry-dark: #A9692F;
+
+  --f-display: "Big Shoulders Display", "Arial Narrow", "Helvetica Neue", sans-serif;
+  --f-body: "Newsreader", Georgia, "Times New Roman", serif;
+  --f-mono: "Martian Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --step--1: .8125rem;
+  --step-0: 1.0625rem;
+  --step-1: 1.3rem;
+  --step-2: 1.75rem;
+  --step-3: clamp(2.2rem, 5vw, 3.2rem);
+  --step-hero: clamp(4.6rem, 17vw, 12.5rem);
+
+  --radius: 14px;
+  --max: 1160px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --paper: #101814;
+    --surface: #18231D;
+    --ink: #E4EBE4;
+    --leaf: #A9C4B3;
+    --muted: #9BAAA1;
+    --line: #2B3A32;
+    --bark: #E38593;
+    --bark-ink: #1A0E10;
+    --plate: #233229;
+    --ok: #6CCB8F;
+    --closed: #F09A86;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #101814;
+  --surface: #18231D;
+  --ink: #E4EBE4;
+  --leaf: #A9C4B3;
+  --muted: #9BAAA1;
+  --line: #2B3A32;
+  --bark: #E38593;
+  --bark-ink: #1A0E10;
+  --plate: #233229;
+  --ok: #6CCB8F;
+  --closed: #F09A86;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: calc(72px + env(safe-area-inset-top, 0px)); }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: var(--step-0);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
+  z-index: 30; background: var(--paper);
+}
+.wrap {
+  max-width: var(--max); margin-inline: auto;
+  padding-left: max(20px, env(safe-area-inset-left, 0px));
+  padding-right: max(20px, env(safe-area-inset-right, 0px));
+}
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+p { margin: 0; }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--bark); outline-offset: 3px; border-radius: 4px; }
+.label {
+  font-family: var(--f-mono); font-size: .72rem; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--muted); font-weight: 500;
+}
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- header ---------- */
+.site-header {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+.site-header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 64px; }
+.brand {
+  font-family: var(--f-display); font-weight: 900; font-size: 1.6rem; letter-spacing: .02em;
+  text-transform: uppercase; text-decoration: none; display: flex; align-items: center; gap: 10px;
+}
+.brand svg { width: 26px; height: 26px; }
+.nav { display: flex; align-items: center; gap: 28px; }
+.nav a {
+  font-family: var(--f-mono); font-size: .75rem; letter-spacing: .08em; text-transform: uppercase;
+  text-decoration: none; color: var(--ink); padding-block: 6px; border-bottom: 2px solid transparent;
+}
+.nav a:hover { border-bottom-color: var(--bark); }
+.nav-toggle {
+  display: none; background: none; border: 1px solid var(--line); color: var(--ink);
+  border-radius: 10px; width: 44px; height: 44px; cursor: pointer; align-items: center; justify-content: center;
+}
+.nav-toggle svg { width: 20px; height: 20px; }
+@media (max-width: 760px) {
+  .nav-toggle { display: inline-flex; }
+  .nav {
+    position: absolute; top: 64px; left: 0; right: 0; flex-direction: column; align-items: stretch; gap: 0;
+    background: var(--paper); border-bottom: 1px solid var(--line);
+    padding: 8px max(20px, env(safe-area-inset-right, 0px)) 16px max(20px, env(safe-area-inset-left, 0px));
+  }
+  .nav[data-open="false"] { display: none; }
+  .nav a { padding-block: 14px; border-bottom: 1px solid var(--line); font-size: .85rem; }
+  .nav a:last-child { border-bottom: 0; }
+}
+
+/* ---------- status pill ---------- */
+.status {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-family: var(--f-mono); font-size: .75rem; letter-spacing: .04em;
+  padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface);
+}
+.status .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); flex: none; }
+.status[data-state="open"] .dot { background: var(--ok); box-shadow: 0 0 0 4px color-mix(in srgb, var(--ok) 22%, transparent); }
+.status[data-state="closed"] .dot { background: var(--closed); }
+
+/* ---------- hero ---------- */
+.hero { padding-block: clamp(36px, 6vw, 72px) clamp(40px, 6vw, 80px); border-bottom: 1px solid var(--line); }
+.hero .wrap { display: grid; grid-template-columns: 1.25fr .9fr; gap: clamp(24px, 4vw, 56px); align-items: end; }
+.hero-copy { display: flex; flex-direction: column; gap: 22px; }
+.wordmark {
+  font-family: var(--f-display); font-weight: 900; text-transform: uppercase;
+  font-size: var(--step-hero); line-height: .82; letter-spacing: -.01em;
+}
+.wordmark span { display: block; }
+.wordmark .sub { color: var(--bark); }
+.lede { font-size: var(--step-1); line-height: 1.45; max-width: 34ch; color: var(--ink); }
+.cta-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font-family: var(--f-mono); font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; font-weight: 500;
+  padding: 14px 20px; border-radius: 999px; text-decoration: none; cursor: pointer;
+  border: 1.5px solid var(--ink); background: transparent; color: var(--ink);
+  transition: transform .15s ease, background-color .15s ease;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn-primary { background: var(--bark); border-color: var(--bark); color: var(--bark-ink); }
+.hero-art { position: relative; display: flex; flex-direction: column; gap: 16px; align-items: stretch; }
+.hero-plate {
+  background: var(--plate); border-radius: 50%; aspect-ratio: 1; max-width: 100%;
+  display: grid; place-items: center; position: relative;
+}
+.hero-plate svg { width: 84%; height: auto; overflow: visible; }
+.steam path { fill: none; stroke: var(--muted); stroke-width: 2.5; stroke-linecap: round; opacity: .55; }
+@media (prefers-reduced-motion: no-preference) {
+  .steam path { animation: rise 3.6s ease-in-out infinite; }
+  .steam path:nth-child(2) { animation-delay: .9s; }
+  .steam path:nth-child(3) { animation-delay: 1.8s; }
+}
+@keyframes rise {
+  0% { transform: translateY(6px); opacity: 0; }
+  35% { opacity: .55; }
+  100% { transform: translateY(-14px); opacity: 0; }
+}
+.ticket {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 16px 18px; display: grid; gap: 4px;
+}
+.ticket strong { font-family: var(--f-display); font-size: 1.5rem; font-weight: 800; text-transform: uppercase; letter-spacing: .02em; line-height: 1.1; }
+.ticket .meta { font-family: var(--f-mono); font-size: .72rem; color: var(--muted); }
+@media (max-width: 820px) {
+  .hero .wrap { grid-template-columns: 1fr; }
+  .hero-art { flex-direction: row; align-items: center; }
+  .hero-plate { width: 44%; flex: none; }
+  .ticket { flex: 1; }
+}
+@media (max-width: 460px) {
+  .hero-art { flex-direction: column; align-items: stretch; }
+  .hero-plate { width: 70%; align-self: center; }
+}
+
+/* ---------- sections ---------- */
+section.block { padding-block: clamp(56px, 8vw, 96px); }
+.section-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 16px 32px; margin-bottom: 32px; }
+.section-head h2 { font-family: var(--f-display); font-weight: 800; text-transform: uppercase; font-size: var(--step-3); line-height: .95; letter-spacing: .01em; }
+.section-head p { max-width: 46ch; color: var(--muted); }
+.section-head .titles { display: grid; gap: 10px; }
+
+/* ---------- menu ---------- */
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
+.tab {
+  font-family: var(--f-mono); font-size: .75rem; letter-spacing: .05em; text-transform: uppercase;
+  padding: 10px 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface);
+  color: var(--ink); cursor: pointer;
+}
+.tab:hover { border-color: var(--ink); }
+.tab[aria-selected="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.menu-group + .menu-group { margin-top: 44px; }
+.menu-group h3 {
+  font-family: var(--f-display); font-weight: 800; text-transform: uppercase; font-size: var(--step-2);
+  letter-spacing: .02em; display: flex; align-items: baseline; gap: 14px; margin-bottom: 16px;
+}
+.menu-group h3 .label { font-size: .68rem; }
+.menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 14px; }
+.item {
+  display: grid; grid-template-columns: 84px 1fr; gap: 16px; align-items: start;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px;
+}
+.item .plate { width: 84px; height: 84px; border-radius: 50%; background: var(--plate); display: grid; place-items: center; }
+.item .plate svg { width: 70px; height: 70px; }
+.item-body { display: grid; gap: 6px; min-width: 0; }
+.item-name { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.item-name h4 { margin: 0; font-family: var(--f-body); font-weight: 600; font-size: 1.15rem; line-height: 1.25; }
+.tag {
+  font-family: var(--f-mono); font-size: .62rem; letter-spacing: .06em; text-transform: uppercase;
+  border: 1px solid var(--line); color: var(--muted); padding: 2px 7px; border-radius: 999px;
+}
+.tag.house { border-color: var(--bark); color: var(--bark); }
+.item-desc { color: var(--muted); font-size: .98rem; line-height: 1.45; }
+.spec { font-family: var(--f-mono); font-size: .68rem; color: var(--leaf); letter-spacing: .02em; }
+.prices { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 4px; font-variant-numeric: tabular-nums; }
+.price { display: inline-flex; align-items: baseline; gap: 6px; }
+.price .sz { font-family: var(--f-mono); font-size: .66rem; color: var(--muted); }
+.price .amt { font-family: var(--f-display); font-weight: 800; font-size: 1.35rem; letter-spacing: .02em; }
+.menu-note { margin-top: 28px; font-family: var(--f-mono); font-size: .74rem; color: var(--muted); line-height: 1.7; max-width: 80ch; }
+
+/* ---------- pour-over board ---------- */
+.board { background: var(--ink); color: var(--paper); }
+.board .section-head p { color: color-mix(in srgb, var(--paper) 72%, var(--ink)); }
+.board .label { color: color-mix(in srgb, var(--paper) 65%, var(--ink)); }
+.origins { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border-top: 1px solid color-mix(in srgb, var(--paper) 25%, var(--ink)); }
+.origin { padding: 24px 24px 8px 0; display: grid; gap: 14px; align-content: start; }
+.origin + .origin { padding-left: 24px; border-left: 1px solid color-mix(in srgb, var(--paper) 25%, var(--ink)); }
+.origin h3 { font-family: var(--f-display); font-weight: 800; font-size: 2.1rem; text-transform: uppercase; line-height: .95; }
+.origin dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-family: var(--f-mono); font-size: .74rem; font-variant-numeric: tabular-nums; }
+.origin dt { color: color-mix(in srgb, var(--paper) 60%, var(--ink)); }
+.origin dd { margin: 0; }
+.notes { font-style: italic; font-size: 1.1rem; }
+.roast { display: grid; gap: 6px; }
+.roast-scale { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
+.roast-scale i { height: 8px; border-radius: 2px; background: color-mix(in srgb, var(--paper) 18%, var(--ink)); }
+.roast-scale i.on { background: var(--crema); }
+.origin .cost { font-family: var(--f-display); font-weight: 800; font-size: 1.6rem; }
+@media (max-width: 860px) {
+  .origins { grid-template-columns: 1fr; }
+  .origin, .origin + .origin { padding: 24px 0; border-left: 0; }
+  .origin + .origin { border-top: 1px solid color-mix(in srgb, var(--paper) 25%, var(--ink)); }
+}
+
+/* ---------- reviews ---------- */
+.reviews-layout { display: grid; grid-template-columns: 300px 1fr; gap: clamp(24px, 4vw, 48px); align-items: start; }
+.summary { display: grid; gap: 16px; position: sticky; top: calc(88px + env(safe-area-inset-top, 0px)); }
+.avg { display: flex; align-items: baseline; gap: 12px; }
+.avg b { font-family: var(--f-display); font-weight: 900; font-size: 5rem; line-height: .85; font-variant-numeric: tabular-nums; }
+.stars { color: var(--bark); letter-spacing: .1em; font-size: 1.05rem; }
+.bars { display: grid; gap: 6px; }
+.bar-row {
+  display: grid; grid-template-columns: 34px 1fr 28px; gap: 10px; align-items: center;
+  font-family: var(--f-mono); font-size: .72rem; font-variant-numeric: tabular-nums;
+  background: none; border: 0; padding: 4px 0; color: var(--ink); cursor: pointer; text-align: left; border-radius: 6px;
+}
+.bar-row .track { height: 8px; background: var(--plate); border-radius: 4px; overflow: hidden; }
+.bar-row .fill { display: block; height: 100%; background: var(--bark); border-radius: 4px; }
+.bar-row[aria-pressed="true"] { font-weight: 500; }
+.bar-row[aria-pressed="true"] .track { outline: 2px solid var(--ink); outline-offset: 2px; }
+.bar-row:disabled { cursor: default; opacity: .5; }
+.filter-note { font-family: var(--f-mono); font-size: .72rem; color: var(--muted); min-height: 1.2em; }
+.link-btn { background: none; border: 0; padding: 0; color: var(--bark); text-decoration: underline; cursor: pointer; font: inherit; }
+.review-list { display: grid; gap: 14px; }
+.review { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px 22px; display: grid; gap: 10px; }
+.review header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; align-items: baseline; }
+.review .who { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+.avatar {
+  width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; flex: none;
+  background: var(--plate); color: var(--leaf); font-family: var(--f-mono); font-size: .7rem; font-weight: 500;
+}
+.review .when { font-family: var(--f-mono); font-size: .68rem; color: var(--muted); }
+.review p { max-width: 65ch; }
+.review .ordered { font-family: var(--f-mono); font-size: .68rem; color: var(--leaf); }
+.review .yours { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; font-family: var(--f-mono); font-size: .68rem; color: var(--muted); }
+.review-form { margin-top: 28px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; display: grid; gap: 16px; }
+.review-form h3 { font-family: var(--f-display); font-weight: 800; text-transform: uppercase; font-size: 1.6rem; }
+.field { display: grid; gap: 6px; }
+.field label, .field legend { font-family: var(--f-mono); font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 0; }
+.field input[type="text"], .field textarea, .field select {
+  font: inherit; color: var(--ink); background: var(--paper); border: 1px solid var(--line);
+  border-radius: 10px; padding: 12px 14px; width: 100%;
+}
+.field textarea { min-height: 110px; resize: vertical; }
+.field input:focus, .field textarea:focus, .field select:focus { outline: 2px solid var(--bark); outline-offset: 1px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 560px) { .form-row { grid-template-columns: 1fr; } }
+fieldset.field { border: 0; margin: 0; padding: 0; }
+.star-input { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 2px; }
+.star-input input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.star-input label { font-size: 1.9rem; line-height: 1; color: var(--line); cursor: pointer; padding: 2px; text-transform: none; letter-spacing: 0; }
+.star-input label:hover, .star-input label:hover ~ label,
+.star-input input:checked ~ label { color: var(--bark); }
+.star-input input:focus-visible + label { outline: 2px solid var(--bark); border-radius: 4px; }
+.form-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.form-msg { font-family: var(--f-mono); font-size: .74rem; }
+.form-msg[data-kind="error"] { color: var(--closed); }
+.form-msg[data-kind="ok"] { color: var(--ok); }
+.hint { font-family: var(--f-mono); font-size: .68rem; color: var(--muted); }
+@media (max-width: 860px) {
+  .reviews-layout { grid-template-columns: 1fr; }
+  .summary { position: static; }
+}
+
+/* ---------- visit ---------- */
+.visit { border-top: 1px solid var(--line); }
+.visit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(24px, 4vw, 48px); align-items: start; }
+.contact-list { display: grid; gap: 24px; }
+.contact-item { display: grid; gap: 6px; }
+.contact-item .big { font-family: var(--f-display); font-weight: 800; font-size: 1.9rem; line-height: 1.05; text-transform: uppercase; letter-spacing: .01em; }
+.contact-item a.big { text-decoration: none; }
+.contact-item a.big:hover { color: var(--bark); }
+.inline-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.btn-sm { padding: 9px 14px; font-size: .7rem; }
+.hours { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.hours td { padding: 10px 0; border-bottom: 1px solid var(--line); }
+.hours td:last-child { text-align: right; font-family: var(--f-mono); font-size: .8rem; }
+.hours tr[data-today="true"] td { font-weight: 600; color: var(--bark); }
+.hours tr[data-today="true"] td:first-child::after { content: " · today"; font-family: var(--f-mono); font-size: .66rem; font-weight: 400; }
+.map-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; display: grid; }
+.map-card svg { width: 100%; height: auto; display: block; }
+.map-card .cap { padding: 14px 18px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; font-family: var(--f-mono); font-size: .72rem; color: var(--muted); border-top: 1px solid var(--line); }
+.map-bg { fill: var(--plate); }
+.map-block { fill: var(--surface); }
+.map-park { fill: color-mix(in srgb, var(--ok) 22%, var(--plate)); }
+.map-river { fill: none; stroke: color-mix(in srgb, #5B8FB0 55%, var(--plate)); stroke-width: 22; stroke-linecap: round; }
+.map-text { fill: var(--muted); font-family: var(--f-mono); font-size: 11px; letter-spacing: .06em; }
+.map-pin { fill: var(--bark); }
+.map-pin-ring { fill: none; stroke: var(--bark); stroke-width: 2; opacity: .4; }
+@media (max-width: 860px) { .visit-grid { grid-template-columns: 1fr; } }
+
+footer.site-footer { border-top: 1px solid var(--line); padding-block: 28px 40px; }
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 24px; font-family: var(--f-mono); font-size: .7rem; color: var(--muted); }
+
+.toast {
+  position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+  background: var(--ink); color: var(--paper); font-family: var(--f-mono); font-size: .75rem;
+  padding: 12px 18px; border-radius: 999px; z-index: 40; max-width: calc(100% - 40px);
+}
+
+/* ---------- illustrations ---------- */
+svg .s { stroke: var(--ill-stroke); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+svg .n { fill: none; }
+svg .cup { fill: var(--cup); }
+svg .coffee { fill: var(--drink, var(--coffee)); }
+svg .crema { fill: var(--top, var(--crema)); }
+svg .foam { fill: var(--foam); }
+svg .glass { fill: var(--glass); }
+svg .pastry { fill: var(--pastry); }
+svg .pastry-d { fill: var(--pastry-dark); }
+svg .ice { fill: rgba(255,255,255,.75); }
+svg .dark { fill: var(--ill-stroke); }
+svg .accent { fill: #E9B44C; }
+</style>
+</head>
+<body>
+
+<!-- Illustration sprite: one symbol per drink or pastry -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-espresso" viewBox="0 0 120 120">
+      <ellipse class="cup s" cx="60" cy="94" rx="36" ry="8"/>
+      <path class="n s" d="M80 64 q14 0 14 10 q0 9 -15 9"/>
+      <path class="cup s" d="M37 58 h46 v14 q0 18 -23 18 q-23 0 -23 -18 z"/>
+      <ellipse class="crema s" cx="60" cy="58" rx="23" ry="5"/>
+    </symbol>
+    <symbol id="i-macchiato" viewBox="0 0 120 120">
+      <ellipse class="cup s" cx="60" cy="94" rx="36" ry="8"/>
+      <path class="n s" d="M80 64 q14 0 14 10 q0 9 -15 9"/>
+      <path class="cup s" d="M37 58 h46 v14 q0 18 -23 18 q-23 0 -23 -18 z"/>
+      <ellipse class="crema s" cx="60" cy="58" rx="23" ry="5"/>
+      <ellipse class="foam" cx="60" cy="58" rx="9" ry="2.6"/>
+    </symbol>
+    <symbol id="i-cortado" viewBox="0 0 120 120">
+      <path class="coffee" d="M44.2 74 L75.8 74 L74 96 L46 96 Z"/>
+      <path class="foam" d="M43 60 L77 60 L75.8 74 L44.2 74 Z"/>
+      <path class="glass s" d="M40 40 L80 40 L74 96 L46 96 Z"/>
+      <path class="n s" d="M43 60 L77 60"/>
+    </symbol>
+    <symbol id="i-latte" viewBox="0 0 120 120">
+      <ellipse class="cup s" cx="60" cy="96" rx="44" ry="9"/>
+      <path class="n s" d="M88 56 q16 0 16 12 q0 12 -20 13"/>
+      <path class="cup s" d="M26 50 h68 q0 42 -34 42 q-34 0 -34 -42 z"/>
+      <ellipse class="crema s" cx="60" cy="50" rx="34" ry="7"/>
+      <path class="foam" d="M60 56 c-10 -6 -14 -10 -9 -12 c4 -1.5 7 1 9 3 c2 -2 5 -4.5 9 -3 c5 2 1 6 -9 12 z"/>
+    </symbol>
+    <symbol id="i-mug" viewBox="0 0 120 120">
+      <path class="n s" d="M82 54 q16 0 16 14 q0 14 -16 14"/>
+      <rect class="cup s" x="32" y="40" width="50" height="58" rx="8"/>
+      <ellipse class="coffee s" cx="57" cy="46" rx="20" ry="3.5"/>
+      <rect class="dark" x="32" y="64" width="50" height="7" opacity=".18"/>
+    </symbol>
+    <symbol id="i-pourover" viewBox="0 0 120 120">
+      <path class="coffee" d="M38 80 h44 l6 14 q0 4 -4 4 h-48 q-4 0 -4 -4 z"/>
+      <path class="glass s" d="M44 58 h32 l12 36 q0 4 -4 4 h-48 q-4 0 -4 -4 z"/>
+      <path class="cup s" d="M30 26 h60 l-16 30 h-28 z"/>
+      <path class="n s" d="M40 34 h40"/>
+      <rect class="cup s" x="40" y="54" width="40" height="6" rx="2"/>
+    </symbol>
+    <symbol id="i-cold" viewBox="0 0 120 120">
+      <path class="coffee" d="M43.4 46 L76.6 46 L72 100 L48 100 Z"/>
+      <rect class="ice s" x="48" y="48" width="14" height="14" rx="3" transform="rotate(-12 55 55)"/>
+      <rect class="ice s" x="60" y="60" width="13" height="13" rx="3" transform="rotate(14 66 66)"/>
+      <path class="glass s" d="M40 28 L80 28 L72 100 L48 100 Z"/>
+      <path class="n s" d="M70 14 L64 70"/>
+    </symbol>
+    <symbol id="i-iced-latte" viewBox="0 0 120 120">
+      <path class="coffee" d="M45.6 72 L74.4 72 L72 100 L48 100 Z"/>
+      <path class="foam" d="M43.4 46 L76.6 46 L74.4 72 L45.6 72 Z"/>
+      <rect class="ice s" x="49" y="50" width="13" height="13" rx="3" transform="rotate(-10 55 56)"/>
+      <rect class="ice s" x="60" y="58" width="12" height="12" rx="3" transform="rotate(16 66 64)"/>
+      <path class="glass s" d="M40 28 L80 28 L72 100 L48 100 Z"/>
+      <path class="n s" d="M70 14 L64 70"/>
+    </symbol>
+    <symbol id="i-tonic" viewBox="0 0 120 120">
+      <path class="coffee" d="M44 40 L76 40 L74.6 56 L45.4 56 Z" opacity=".9"/>
+      <path class="glass" d="M45.4 56 L74.6 56 L72 100 L48 100 Z" style="fill:rgba(233,212,160,.55)"/>
+      <circle class="accent s" cx="76" cy="32" r="12"/>
+      <path class="n s" d="M76 22 v20 M66 32 h20"/>
+      <path class="glass s" d="M40 28 L80 28 L72 100 L48 100 Z"/>
+      <circle class="ice" cx="56" cy="76" r="2"/><circle class="ice" cx="64" cy="86" r="1.6"/><circle class="ice" cx="60" cy="66" r="1.4"/>
+    </symbol>
+    <symbol id="i-bowl" viewBox="0 0 120 120">
+      <ellipse class="cup s" cx="60" cy="94" rx="40" ry="8"/>
+      <path class="cup s" d="M22 52 h76 q-4 38 -38 38 q-34 0 -38 -38 z"/>
+      <ellipse class="coffee s" cx="60" cy="52" rx="38" ry="7"/>
+      <path class="n" d="M44 52 q8 -4 16 0 q8 4 16 0" stroke="rgba(255,255,255,.55)" stroke-width="2.5" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-croissant" viewBox="0 0 120 120">
+      <path class="pastry s" d="M18 78 Q22 52 42 48 Q60 40 78 48 Q98 52 102 78 Q94 84 86 78 Q82 66 72 62 Q60 58 48 62 Q38 66 34 78 Q26 84 18 78 Z"/>
+      <path class="n s" d="M42 48 Q46 58 48 62 M60 44 V58 M78 48 Q74 58 72 62"/>
+      <path class="pastry-d" d="M50 52 q10 -3 20 0 l-2 5 q-8 -2 -16 0 z" opacity=".5"/>
+    </symbol>
+    <symbol id="i-bun" viewBox="0 0 120 120">
+      <path class="pastry s" d="M60 26 C86 26 98 46 98 66 C98 88 80 96 60 96 C40 96 22 88 22 66 C22 46 34 26 60 26 Z"/>
+      <path class="n s" d="M60 62 c4 0 6 3 6 6 c0 6 -7 9 -12 7 c-8 -3 -9 -14 -3 -20 c8 -8 22 -5 26 5 c5 12 -4 25 -17 26"/>
+      <circle class="foam" cx="44" cy="44" r="2"/><circle class="foam" cx="76" cy="42" r="2"/><circle class="foam" cx="82" cy="70" r="2"/><circle class="foam" cx="38" cy="72" r="2"/>
+    </symbol>
+    <symbol id="i-scone" viewBox="0 0 120 120">
+      <path class="pastry s" d="M26 88 L56 30 Q60 24 64 30 L94 88 Q96 94 88 94 L32 94 Q24 94 26 88 Z"/>
+      <path class="pastry-d" d="M30 86 L90 86 L92 90 Q92 92 88 92 L32 92 Q28 92 28 90 Z" opacity=".55"/>
+      <circle class="dark" cx="56" cy="56" r="2.6" style="fill:#5E7F3A"/><circle class="dark" cx="66" cy="68" r="2.6" style="fill:#5E7F3A"/><circle class="dark" cx="50" cy="74" r="2.6" style="fill:#E9B44C"/><circle class="dark" cx="70" cy="80" r="2.6" style="fill:#E9B44C"/>
+    </symbol>
+    <symbol id="i-toast" viewBox="0 0 120 120">
+      <path class="pastry s" d="M30 96 V54 Q20 50 22 38 Q26 24 44 24 H76 Q94 24 98 38 Q100 50 90 54 V96 Z"/>
+      <path class="foam" d="M36 92 V56 Q28 52 30 42 Q32 32 46 32 H74 Q88 32 90 42 Q92 52 84 56 V92 Z"/>
+      <rect class="s" x="46" y="50" width="22" height="16" rx="3" style="fill:#F6DC8B"/>
+      <path d="M50 74 q10 -4 20 2 q4 6 -6 8 q-12 2 -14 -10 z" style="fill:#A8344A"/>
+    </symbol>
+    <symbol id="i-cookie" viewBox="0 0 120 120">
+      <circle class="pastry s" cx="60" cy="62" r="36"/>
+      <circle class="dark" cx="46" cy="50" r="5" style="fill:#3A2116"/><circle class="dark" cx="70" cy="46" r="4" style="fill:#3A2116"/>
+      <circle class="dark" cx="74" cy="72" r="5" style="fill:#3A2116"/><circle class="dark" cx="50" cy="76" r="4" style="fill:#3A2116"/><circle class="dark" cx="60" cy="62" r="3" style="fill:#3A2116"/>
+      <circle cx="40" cy="64" r="1.4" style="fill:#fff"/><circle cx="80" cy="58" r="1.4" style="fill:#fff"/><circle cx="62" cy="86" r="1.4" style="fill:#fff"/>
+    </symbol>
+  </defs>
+</svg>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Ninebark Coffee, back to top">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3 C25 9 25 21 16 29 C7 21 7 9 16 3 Z" fill="var(--bark)"/><path d="M16 7 V27" stroke="var(--paper)" stroke-width="1.6" stroke-linecap="round"/></svg>
+      Ninebark
+    </a>
+    <button class="nav-toggle" id="nav-toggle" aria-controls="site-nav" aria-expanded="false" aria-label="Open menu">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2 5h16M2 10h16M2 15h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </button>
+    <nav class="nav" id="site-nav" data-open="false" aria-label="Main">
+      <a href="#menu">Menu</a>
+      <a href="#pourover">Pour-over</a>
+      <a href="#reviews">Reviews</a>
+      <a href="#visit">Visit &amp; contact</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-copy">
+        <span class="status" id="status" data-state="unknown" role="status"><span class="dot"></span><span id="status-text">Checking today's hours…</span></span>
+        <h1 class="wordmark"><span>Ninebark</span><span class="sub">Coffee</span></h1>
+        <p class="lede">An espresso bar and small-batch roaster on Alder Street. We roast twice a week, bake every morning, and pull every shot to a recipe you can read on the menu.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#menu">See the menu</a>
+          <a class="btn" href="#visit">Hours &amp; directions</a>
+        </div>
+      </div>
+      <div class="hero-art">
+        <div class="hero-plate" aria-hidden="true">
+          <svg viewBox="0 0 120 120" class="ill">
+            <g class="steam"><path d="M50 30 q-5 -6 0 -12 q5 -6 0 -12"/><path d="M60 32 q-5 -6 0 -12 q5 -6 0 -12"/><path d="M70 30 q-5 -6 0 -12 q5 -6 0 -12"/></g>
+            <use href="#i-latte"/>
+          </svg>
+        </div>
+        <div class="ticket">
+          <span class="label">On the bar today</span>
+          <strong>Guji, Ethiopia</strong>
+          <span>Blueberry, jasmine, raw honey</span>
+          <span class="meta">Natural · 2,100 masl · roasted Tue</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="menu" aria-labelledby="menu-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="titles">
+          <span class="label">Prices include tax</span>
+          <h2 id="menu-title">The menu</h2>
+        </div>
+        <p>Espresso is a double shot of our Alder Street blend. Oat, almond and whole milk at no charge. Pastries come from our own oven, baked before 6 am.</p>
+      </div>
+      <div class="tabs" role="tablist" aria-label="Menu categories" id="tabs"></div>
+      <div id="menu-panel" role="tabpanel" aria-labelledby="menu-title"></div>
+      <p class="menu-note">Recipe key: 18 g → 36 g means 18 grams of ground coffee in, 36 grams of espresso out. Extra shot $1.00 · Decaf available on any espresso drink · Vanilla, brown-butter sorghum or cardamom syrup +$0.75</p>
+    </div>
+  </section>
+
+  <section class="block board" id="pourover" aria-labelledby="po-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="titles">
+          <span class="label">Brewed to order, 1:16 ratio, 3½ minutes</span>
+          <h2 id="po-title">Pour-over board</h2>
+        </div>
+        <p>Three single-origin coffees rotate through the bar. Each one is also sold as whole beans in 12 oz bags at the register.</p>
+      </div>
+      <div class="origins" id="origins"></div>
+    </div>
+  </section>
+
+  <section class="block" id="reviews" aria-labelledby="rev-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="titles">
+          <span class="label">Sample reviews</span>
+          <h2 id="rev-title">What regulars say</h2>
+        </div>
+        <p>Tap a star row to see only those reviews. Add your own below.</p>
+      </div>
+      <div class="reviews-layout">
+        <aside class="summary" aria-label="Rating summary">
+          <div class="avg"><b id="avg">–</b><div><div class="stars" id="avg-stars" aria-hidden="true"></div><span class="label" id="count"></span></div></div>
+          <div class="bars" id="bars"></div>
+          <p class="filter-note" id="filter-note" aria-live="polite"></p>
+        </aside>
+        <div>
+          <div class="review-list" id="review-list"></div>
+          <form class="review-form" id="review-form" novalidate>
+            <h3>Leave a review</h3>
+            <div class="form-row">
+              <div class="field">
+                <label for="rv-name">Your name</label>
+                <input type="text" id="rv-name" name="name" maxlength="40" autocomplete="given-name" placeholder="e.g. Sam R.">
+              </div>
+              <div class="field">
+                <label for="rv-item">What you ordered (optional)</label>
+                <select id="rv-item" name="item"><option value="">Choose an item</option></select>
+              </div>
+            </div>
+            <fieldset class="field">
+              <legend>Rating</legend>
+              <div class="star-input" id="rv-stars">
+                <input type="radio" id="rv-5" name="rating" value="5"><label for="rv-5" title="5 stars">★<span class="sr-only">5 stars</span></label>
+                <input type="radio" id="rv-4" name="rating" value="4"><label for="rv-4" title="4 stars">★<span class="sr-only">4 stars</span></label>
+                <input type="radio" id="rv-3" name="rating" value="3"><label for="rv-3" title="3 stars">★<span class="sr-only">3 stars</span></label>
+                <input type="radio" id="rv-2" name="rating" value="2"><label for="rv-2" title="2 stars">★<span class="sr-only">2 stars</span></label>
+                <input type="radio" id="rv-1" name="rating" value="1"><label for="rv-1" title="1 star">★<span class="sr-only">1 star</span></label>
+              </div>
+            </fieldset>
+            <div class="field">
+              <label for="rv-text">Your review</label>
+              <textarea id="rv-text" name="text" maxlength="600" placeholder="What did you have, and how was it?"></textarea>
+            </div>
+            <div class="form-foot">
+              <span class="hint" id="rv-hint">Saved in this browser · <span id="rv-chars">0</span>/600</span>
+              <button class="btn btn-primary" type="submit">Post review</button>
+            </div>
+            <p class="form-msg" id="rv-msg" role="status" aria-live="polite"></p>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block visit" id="visit" aria-labelledby="visit-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="titles">
+          <span class="label">Hours shown in Central Time</span>
+          <h2 id="visit-title">Visit &amp; contact</h2>
+        </div>
+        <p>Walk-ins welcome. Call ahead for orders of six drinks or more, or email about catering and private events.</p>
+      </div>
+      <div class="visit-grid">
+        <div class="contact-list">
+          <div class="contact-item">
+            <span class="label">Address</span>
+            <span class="big" id="address">418 Alder Street<br>Riverside District</span>
+            <div class="inline-actions">
+              <button class="btn btn-sm" type="button" id="copy-address">Copy address</button>
+              <span class="hint">Bike rack out front · street parking on 4th Ave</span>
+            </div>
+          </div>
+          <div class="contact-item">
+            <span class="label">Phone</span>
+            <a class="big" href="tel:+15550142290">(555) 014-2290</a>
+          </div>
+          <div class="contact-item">
+            <span class="label">Email</span>
+            <span class="big" style="text-transform:none;font-size:1.6rem">hello@ninebark.coffee</span>
+            <div class="inline-actions">
+              <button class="btn btn-sm" type="button" id="copy-email">Copy email</button>
+              <a class="btn btn-sm" href="mailto:hello@ninebark.coffee">Open in mail app</a>
+            </div>
+          </div>
+          <div class="contact-item">
+            <span class="label">Hours</span>
+            <table class="hours" id="hours"><tbody></tbody></table>
+          </div>
+        </div>
+        <figure class="map-card" style="margin:0">
+          <svg viewBox="0 0 480 400" role="img" aria-labelledby="map-title">
+            <title id="map-title">Map: Ninebark is on Alder Street at the corner of 4th Avenue, one block north of Riverside Park.</title>
+            <rect class="map-bg" width="480" height="400"/>
+            <path class="map-river" d="M-20 360 C 80 330, 160 390, 260 350 S 420 320, 500 340"/>
+            <rect class="map-block" x="20" y="20" width="120" height="90" rx="6"/>
+            <rect class="map-block" x="170" y="20" width="130" height="90" rx="6"/>
+            <rect class="map-block" x="330" y="20" width="130" height="90" rx="6"/>
+            <rect class="map-block" x="20" y="150" width="120" height="100" rx="6"/>
+            <rect class="map-block" x="170" y="150" width="130" height="100" rx="6"/>
+            <rect class="map-block" x="330" y="150" width="130" height="100" rx="6"/>
+            <rect class="map-park" x="20" y="270" width="280" height="50" rx="6"/>
+            <rect class="map-block" x="330" y="270" width="130" height="50" rx="6"/>
+            <text class="map-text" x="24" y="138">ALDER ST</text>
+            <text class="map-text" x="315" y="98" transform="rotate(-90 315 98)">4TH AVE</text>
+            <text class="map-text" x="155" y="98" transform="rotate(-90 155 98)">3RD AVE</text>
+            <text class="map-text" x="34" y="300">RIVERSIDE PARK</text>
+            <circle class="map-pin-ring" cx="300" cy="130" r="20"/>
+            <path class="map-pin" d="M300 136 c-10 -12 -14 -18 -14 -24 a14 14 0 0 1 28 0 c0 6 -4 12 -14 24 z"/>
+            <circle cx="300" cy="112" r="5" fill="var(--surface)"/>
+          </svg>
+          <figcaption class="cap"><span>Corner of Alder St &amp; 4th Ave</span><span>Bus 12 · Alder/4th stop</span></figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>© Ninebark Coffee · 418 Alder Street</span>
+    <span>Ninebark is a fictional shop; reviews and contact details are placeholders.</span>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+(() => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const money = n => "$" + n.toFixed(2);
+
+  /* ---------- data ---------- */
+  const MENU = [
+    { cat: "Espresso", note: "Alder Street blend", items: [
+      { name: "Espresso", ill: "espresso", desc: "Milk chocolate, cherry, a long brown-sugar finish.", spec: "18 g → 36 g · 28 s", prices: [["Double", 3.25]] },
+      { name: "Macchiato", ill: "macchiato", desc: "A double shot marked with a spoon of foam.", spec: "18 g → 36 g + foam", prices: [["3 oz", 3.50]] },
+      { name: "Cortado", ill: "cortado", desc: "Equal parts espresso and steamed milk, served in glass.", spec: "4½ oz", prices: [["4½ oz", 4.25]] },
+      { name: "Cappuccino", ill: "latte", desc: "Dense foam, poured with a tulip.", prices: [["8 oz", 4.50], ["12 oz", 5.00]] },
+      { name: "Latte", ill: "latte", desc: "Silky milk over a double shot.", prices: [["12 oz", 5.00], ["16 oz", 5.75]] },
+      { name: "Ninebark Latte", ill: "latte", house: true, desc: "Our brown-butter sorghum syrup, sea salt on top.", prices: [["12 oz", 6.00], ["16 oz", 6.75]], top: "#B97A3E" },
+      { name: "Mocha", ill: "latte", desc: "70% dark chocolate melted into the shot.", prices: [["12 oz", 5.75], ["16 oz", 6.50]], top: "#6E3F28" },
+    ]},
+    { cat: "Brewed", note: "roasted in-house", items: [
+      { name: "Batch brew", ill: "mug", desc: "Rotating single origin, brewed every 30 minutes.", spec: "Free refill with a pastry", prices: [["12 oz", 2.75], ["16 oz", 3.25]] },
+      { name: "Pour-over", ill: "pourover", desc: "Any coffee from the pour-over board, brewed to order.", spec: "1:16 · 3½ min", prices: [["from", 6.00]] },
+      { name: "Café au lait", ill: "mug", desc: "Batch brew topped with steamed milk.", prices: [["12 oz", 3.75], ["16 oz", 4.25]], drink: "#8A5A3A" },
+    ]},
+    { cat: "Cold", note: "ice made from filtered water", items: [
+      { name: "Cold brew", ill: "cold", desc: "Steeped 18 hours. Low acid, cocoa and dried fig.", spec: "18 h steep", prices: [["12 oz", 4.50], ["16 oz", 5.25]] },
+      { name: "Iced latte", ill: "iced-latte", desc: "Double shot over cold milk and ice.", prices: [["12 oz", 5.25], ["16 oz", 6.00]] },
+      { name: "Espresso tonic", ill: "tonic", house: true, desc: "Tonic, a double shot floated on top, orange peel.", prices: [["12 oz", 5.50]] },
+    ]},
+    { cat: "Tea & more", note: "", items: [
+      { name: "House chai", ill: "mug", desc: "Black tea simmered with cardamom, ginger and black pepper.", prices: [["12 oz", 5.00], ["16 oz", 5.75]], drink: "#B9824F" },
+      { name: "Matcha latte", ill: "bowl", desc: "Ceremonial-grade matcha whisked to order.", prices: [["12 oz", 5.75]], drink: "#7E9B4A" },
+      { name: "Hot chocolate", ill: "mug", desc: "The mocha chocolate with steamed milk. Kids' size available.", prices: [["8 oz", 3.50], ["12 oz", 4.50]], drink: "#5A3222" },
+    ]},
+    { cat: "Bakery", note: "baked here each morning", items: [
+      { name: "Butter croissant", ill: "croissant", desc: "Three-day laminated dough, cultured butter.", prices: [["each", 4.25]] },
+      { name: "Cardamom morning bun", ill: "bun", house: true, desc: "Croissant dough rolled with cardamom sugar and orange zest.", prices: [["each", 4.75]] },
+      { name: "Cheddar-chive scone", ill: "scone", desc: "Sharp white cheddar and chives, black pepper crust.", prices: [["each", 4.00]] },
+      { name: "Sourdough toast", ill: "toast", desc: "Thick-cut, cultured butter and seasonal jam.", tags: ["V"], prices: [["2 slices", 5.50]] },
+      { name: "Brown-butter cookie", ill: "cookie", desc: "Dark chocolate chunks and flaky salt.", prices: [["each", 3.25]] },
+    ]},
+  ];
+
+  const ORIGINS = [
+    { name: "Huila, Colombia", producer: "Las Flores co-op", process: "Washed", altitude: "1,750 masl", roasted: "Fri", roast: 2, notes: "Red grape, panela, cocoa nib", price: 6.00 },
+    { name: "Guji, Ethiopia", producer: "Hambela washing station", process: "Natural", altitude: "2,100 masl", roasted: "Tue", roast: 1, notes: "Blueberry, jasmine, raw honey", price: 7.00 },
+    { name: "Santa Ana, El Salvador", producer: "Finca El Mirador", process: "Honey", altitude: "1,450 masl", roasted: "Tue", roast: 3, notes: "Toffee, mandarin, almond", price: 6.00 },
+  ];
+
+  const SAMPLE_REVIEWS = [
+    { id: "s1", name: "Priya K.", rating: 5, date: "2026-10-21", item: "Cardamom morning bun", text: "The morning bun sells out by nine on Saturdays for a reason. Flaky, not too sweet, and the orange zest is the right call. I pair it with a cortado and stay for an hour." },
+    { id: "s2", name: "Marcus T.", rating: 5, date: "2026-10-14", item: "Pour-over", text: "The barista walked me through the three coffees on the board and let me smell the Guji before I ordered. It tasted like blueberries. I bought a bag on the way out." },
+    { id: "s3", name: "Elena V.", rating: 4, date: "2026-10-02", item: "Ninebark Latte", text: "Great house latte, the salt on top balances the syrup. Seating gets tight around noon on weekdays, so I take it to the park across the street." },
+    { id: "s4", name: "Jordan L.", rating: 5, date: "2026-09-27", item: "Espresso tonic", text: "Best espresso tonic in town. They float the shot so you get that layered look, and the orange peel actually matters." },
+    { id: "s5", name: "Hannah W.", rating: 4, date: "2026-09-15", item: "Cheddar-chive scone", text: "Savory scone is excellent and warm when I get there early. Wish they had a few more gluten-free options, but staff are honest about what's in everything." },
+    { id: "s6", name: "Dev P.", rating: 3, date: "2026-09-03", item: "Cold brew", text: "Cold brew is smooth but I'd like a bigger size for summer. Friendly staff and quick line even at 8 am." },
+  ];
+
+  // Sunday = 0. [open, close] in minutes after midnight, Central Time.
+  const HOURS = [
+    [8 * 60, 15 * 60],          // Sun
+    [6 * 60 + 30, 18 * 60],     // Mon
+    [6 * 60 + 30, 18 * 60],
+    [6 * 60 + 30, 18 * 60],
+    [6 * 60 + 30, 18 * 60],
+    [6 * 60 + 30, 18 * 60],     // Fri
+    [7 * 60 + 30, 17 * 60],     // Sat
+  ];
+  const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const TZ = "America/Chicago";
+
+  /* ---------- nav ---------- */
+  const navToggle = $("#nav-toggle"), nav = $("#site-nav");
+  const setNav = open => {
+    nav.dataset.open = String(open);
+    navToggle.setAttribute("aria-expanded", String(open));
+    navToggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+  };
+  navToggle.addEventListener("click", () => setNav(nav.dataset.open !== "true"));
+  nav.addEventListener("click", e => { if (e.target.closest("a")) setNav(false); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") setNav(false); });
+
+  /* ---------- toast ---------- */
+  const toast = $("#toast"); let toastTimer;
+  const showToast = msg => {
+    toast.textContent = msg; toast.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => { toast.hidden = true; }, 2600);
+  };
+
+  /* ---------- hours & status ---------- */
+  const fmtTime = m => {
+    const h = Math.floor(m / 60), mm = m % 60, ap = h >= 12 ? "pm" : "am";
+    const h12 = ((h + 11) % 12) + 1;
+    return mm ? `${h12}:${String(mm).padStart(2, "0")} ${ap}` : `${h12} ${ap}`;
+  };
+  const shopNow = () => {
+    try {
+      const parts = new Intl.DateTimeFormat("en-US", { timeZone: TZ, weekday: "short", hour: "numeric", minute: "numeric", hourCycle: "h23" }).formatToParts(new Date());
+      const get = t => parts.find(p => p.type === t).value;
+      const day = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(get("weekday"));
+      return { day, mins: (+get("hour") % 24) * 60 + +get("minute") };
+    } catch (e) {
+      const d = new Date(); return { day: d.getDay(), mins: d.getHours() * 60 + d.getMinutes() };
+    }
+  };
+  const renderHours = () => {
+    const { day, mins } = shopNow();
+    const order = [1, 2, 3, 4, 5, 6, 0];
+    $("#hours tbody").innerHTML = order.map(d =>
+      `<tr data-today="${d === day}"><td>${DAYS[d]}</td><td>${fmtTime(HOURS[d][0])} – ${fmtTime(HOURS[d][1])}</td></tr>`).join("");
+    const [o, c] = HOURS[day];
+    const st = $("#status"), txt = $("#status-text");
+    if (mins >= o && mins < c) {
+      st.dataset.state = "open";
+      txt.textContent = c - mins <= 30 ? `Open · closing soon at ${fmtTime(c)}` : `Open now · until ${fmtTime(c)}`;
+    } else {
+      st.dataset.state = "closed";
+      const nextDay = mins < o ? day : (day + 1) % 7;
+      const when = nextDay === day ? "today" : nextDay === (day + 1) % 7 ? "tomorrow" : DAYS[nextDay];
+      txt.textContent = `Closed · opens ${when} at ${fmtTime(HOURS[nextDay][0])}`;
+    }
+  };
+  renderHours();
+  setInterval(renderHours, 60 * 1000);
+
+  /* ---------- menu ---------- */
+  const tabs = $("#tabs"), panel = $("#menu-panel");
+  const cats = ["All", ...MENU.map(g => g.cat)];
+  let activeCat = "All";
+  const itemHTML = it => {
+    const vars = [it.drink && `--drink:${it.drink}`, it.top && `--top:${it.top}`].filter(Boolean).join(";");
+    const tags = (it.house ? `<span class="tag house">House</span>` : "") + (it.tags || []).map(t => `<span class="tag">${esc(t)}</span>`).join("");
+    return `<article class="item">
+      <div class="plate"><svg class="ill" viewBox="0 0 120 120" style="${vars}" role="img" aria-label="${esc(it.name)} illustration"><use href="#i-${it.ill}"/></svg></div>
+      <div class="item-body">
+        <div class="item-name"><h4>${esc(it.name)}</h4>${tags}</div>
+        <p class="item-desc">${esc(it.desc)}</p>
+        ${it.spec ? `<span class="spec">${esc(it.spec)}</span>` : ""}
+        <div class="prices">${it.prices.map(([sz, p]) => `<span class="price"><span class="sz">${esc(sz)}</span><span class="amt">${money(p)}</span></span>`).join("")}</div>
+      </div>
+    </article>`;
+  };
+  const renderMenu = () => {
+    tabs.innerHTML = cats.map(c => `<button class="tab" role="tab" id="tab-${c.replace(/\W+/g, "")}" aria-selected="${c === activeCat}" tabindex="${c === activeCat ? 0 : -1}">${esc(c)}</button>`).join("");
+    const groups = activeCat === "All" ? MENU : MENU.filter(g => g.cat === activeCat);
+    panel.innerHTML = groups.map(g => `<div class="menu-group">
+      <h3>${esc(g.cat)} ${g.note ? `<span class="label">${esc(g.note)}</span>` : ""}</h3>
+      <div class="menu-grid">${g.items.map(itemHTML).join("")}</div></div>`).join("");
+  };
+  tabs.addEventListener("click", e => {
+    const b = e.target.closest(".tab"); if (!b) return;
+    activeCat = b.textContent; renderMenu(); $(`#tabs .tab[aria-selected="true"]`).focus();
+  });
+  tabs.addEventListener("keydown", e => {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    const i = cats.indexOf(activeCat), n = cats.length;
+    activeCat = cats[(i + (e.key === "ArrowRight" ? 1 : n - 1)) % n];
+    renderMenu(); $(`#tabs .tab[aria-selected="true"]`).focus(); e.preventDefault();
+  });
+  renderMenu();
+
+  /* ---------- pour-over board ---------- */
+  $("#origins").innerHTML = ORIGINS.map(o => `<article class="origin">
+    <span class="label">${esc(o.producer)}</span>
+    <h3>${esc(o.name)}</h3>
+    <p class="notes">${esc(o.notes)}</p>
+    <dl><dt>Process</dt><dd>${esc(o.process)}</dd><dt>Altitude</dt><dd>${esc(o.altitude)}</dd><dt>Roasted</dt><dd>${esc(o.roasted)}</dd></dl>
+    <div class="roast"><span class="label">Roast: ${["", "light", "light-medium", "medium", "medium-dark", "dark"][o.roast]}</span>
+      <div class="roast-scale" aria-hidden="true">${[1, 2, 3, 4, 5].map(i => `<i class="${i <= o.roast ? "on" : ""}"></i>`).join("")}</div></div>
+    <span class="cost">${money(o.price)}</span>
+  </article>`).join("");
+
+  /* ---------- reviews ---------- */
+  const STORE_KEY = "ninebark-reviews-v1";
+  const loadMine = () => { try { return JSON.parse(localStorage.getItem(STORE_KEY) || "[]"); } catch (e) { return []; } };
+  let storageOK = true;
+  const saveMine = list => { try { localStorage.setItem(STORE_KEY, JSON.stringify(list)); storageOK = true; } catch (e) { storageOK = false; } };
+  let mine = loadMine();
+  let starFilter = 0;
+
+  const itemSelect = $("#rv-item");
+  MENU.forEach(g => {
+    const og = document.createElement("optgroup"); og.label = g.cat;
+    g.items.forEach(it => { const o = document.createElement("option"); o.value = o.textContent = it.name; og.appendChild(o); });
+    itemSelect.appendChild(og);
+  });
+
+  const starStr = n => "★".repeat(n) + "☆".repeat(5 - n);
+  const initials = name => name.trim().split(/\s+/).map(p => p[0]).join("").slice(0, 2).toUpperCase() || "?";
+  const fmtDate = iso => new Date(iso + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+
+  const renderReviews = () => {
+    const all = [...mine, ...SAMPLE_REVIEWS].sort((a, b) => b.date.localeCompare(a.date));
+    const avg = all.reduce((s, r) => s + r.rating, 0) / all.length;
+    $("#avg").textContent = avg.toFixed(1);
+    $("#avg-stars").textContent = starStr(Math.round(avg));
+    $("#count").textContent = `${all.length} reviews`;
+    const counts = [5, 4, 3, 2, 1].map(n => [n, all.filter(r => r.rating === n).length]);
+    const max = Math.max(...counts.map(c => c[1]), 1);
+    $("#bars").innerHTML = counts.map(([n, c]) =>
+      `<button class="bar-row" type="button" data-n="${n}" aria-pressed="${starFilter === n}" ${c ? "" : "disabled"} aria-label="Show ${n}-star reviews (${c})">
+        <span>${n} ★</span><span class="track"><span class="fill" style="width:${(c / max) * 100}%"></span></span><span>${c}</span></button>`).join("");
+    const shown = starFilter ? all.filter(r => r.rating === starFilter) : all;
+    $("#filter-note").innerHTML = starFilter ? `Showing ${shown.length} ${starFilter}-star review${shown.length === 1 ? "" : "s"} · <button class="link-btn" type="button" id="clear-filter">Show all</button>` : "";
+    $("#review-list").innerHTML = shown.map(r => `<article class="review">
+      <header>
+        <span class="who"><span class="avatar" aria-hidden="true">${esc(initials(r.name))}</span>${esc(r.name)}</span>
+        <span><span class="stars" aria-label="${r.rating} out of 5 stars">${starStr(r.rating)}</span> <span class="when">${fmtDate(r.date)}</span></span>
+      </header>
+      <p>${esc(r.text)}</p>
+      ${r.item ? `<span class="ordered">Ordered: ${esc(r.item)}</span>` : ""}
+      ${r.mine ? `<span class="yours">Your review, saved in this browser <button class="link-btn" type="button" data-del="${esc(r.id)}">Delete</button></span>` : ""}
+    </article>`).join("");
+  };
+  $("#bars").addEventListener("click", e => {
+    const b = e.target.closest(".bar-row"); if (!b) return;
+    const n = +b.dataset.n; starFilter = starFilter === n ? 0 : n; renderReviews();
+  });
+  $("#filter-note").addEventListener("click", e => { if (e.target.id === "clear-filter") { starFilter = 0; renderReviews(); } });
+  $("#review-list").addEventListener("click", e => {
+    const id = e.target.dataset && e.target.dataset.del; if (!id) return;
+    mine = mine.filter(r => r.id !== id); saveMine(mine); renderReviews(); showToast("Review deleted");
+  });
+
+  const form = $("#review-form"), msg = $("#rv-msg"), text = $("#rv-text");
+  text.addEventListener("input", () => { $("#rv-chars").textContent = text.value.length; });
+  form.addEventListener("submit", e => {
+    e.preventDefault();
+    const name = $("#rv-name").value.trim();
+    const ratingEl = form.querySelector('input[name="rating"]:checked');
+    const body = text.value.trim();
+    const problems = [];
+    if (!name) problems.push("add your name");
+    if (!ratingEl) problems.push("pick a star rating");
+    if (body.length < 10) problems.push("write at least 10 characters");
+    if (problems.length) {
+      msg.dataset.kind = "error";
+      msg.textContent = "To post, " + problems.join(", ") + ".";
+      (!name ? $("#rv-name") : !ratingEl ? $("#rv-5") : text).focus();
+      return;
+    }
+    const d = new Date();
+    const review = {
+      id: "m" + d.getTime(), name, rating: +ratingEl.value, item: itemSelect.value, text: body, mine: true,
+      date: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
+    };
+    mine = [review, ...mine]; saveMine(mine);
+    starFilter = 0; form.reset(); $("#rv-chars").textContent = "0";
+    renderReviews();
+    msg.dataset.kind = "ok";
+    msg.textContent = storageOK ? "Posted. Your review is at the top of the list." : "Posted for this visit. This browser blocks saving, so it will be gone after a reload.";
+    $("#review-list .review").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
+  });
+  renderReviews();
+
+  /* ---------- copy buttons ---------- */
+  const copy = async (value, label) => {
+    try { await navigator.clipboard.writeText(value); showToast(`${label} copied`); }
+    catch (e) { showToast(`Copying is blocked here. ${label}: ${value}`); }
+  };
+  $("#copy-address").addEventListener("click", () => copy("418 Alder Street, Riverside District", "Address"));
+  $("#copy-email").addEventListener("click", () => copy("hello@ninebark.coffee", "Email"));
+})();
+</script>
+</body>
+</html>
